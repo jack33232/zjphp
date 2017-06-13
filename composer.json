@@ -13,15 +13,15 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/jack33232/klein.php.git"
+            "url": "https://github.com/jack33232/klein.php"
         },
         {
             "type": "vcs",
-            "url": "https://github.com/jack33232/database.git"
+            "url": "https://github.com/jack33232/database"
         },
         {
             "type": "vcs",
-            "url": "https://github.com/jack33232/KLogger.git"
+            "url": "https://github.com/jack33232/KLogger"
         }
     ],
     "require": {
