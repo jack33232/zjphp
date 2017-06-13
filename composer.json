@@ -1,0 +1,51 @@
+{
+    "name": "jack33232/zjphp",
+    "description": "A framework combine Yii DI features & some other services",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "jack33232",
+            "email": "jack33232@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php-console/php-console": "^3.1",
+        "klein/klein": "dev-ZJ",
+        "guzzlehttp/guzzle": "~6.2",
+        "phpFastCache/phpFastCache": "~5.0",
+        "katzgrau/klogger": "dev-master",
+        "illuminate/database": "5.2.x-dev",
+        "illuminate/events": "5.2.*",
+        "illuminate/validation" : "5.2.*",
+        "illuminate/pagination" : "5.2.*",
+        "illuminate/support": "5.2.*",
+        "twig/twig": "~1.0",
+        "phpmailer/phpmailer": "~5.2",
+        "ezyang/htmlpurifier": "~4.6",
+        "intervention/image": "2.*",
+        "symfony/config" : "3.0.*",
+        "symfony/twig-bridge": "*",
+        "league/climate": "3.2.*"
+    },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/jack33232/klein.php.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/jack33232/database.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/jack33232/KLogger.git"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "ZJPHP\\": ""
+        }
+    }
+}
