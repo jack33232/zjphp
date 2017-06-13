@@ -10,6 +10,20 @@
         }
     ],
     "minimum-stability": "dev",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/jack33232/klein.php.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/jack33232/database.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/jack33232/KLogger.git"
+        }
+    ],
     "require": {
         "php-console/php-console": "^3.1",
         "klein/klein": "dev-ZJ",
@@ -29,20 +43,6 @@
         "symfony/twig-bridge": "*",
         "league/climate": "3.2.*"
     },
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/jack33232/klein.php.git"
-        },
-        {
-            "type": "git",
-            "url": "https://github.com/jack33232/database.git"
-        },
-        {
-            "type": "git",
-            "url": "https://github.com/jack33232/KLogger.git"
-        }
-    ],
     "autoload": {
         "psr-4": {
             "ZJPHP\\": ""
