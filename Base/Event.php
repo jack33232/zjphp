@@ -73,13 +73,6 @@ class Event extends Object
         }
     }
 
-    public static function rollBackTransactionEvents()
-    {
-        self::$_in_transaction = false;
-        self::$_transaction_events[$transaction_name] = [];
-        self::$_triggered_transaction_events[$transaction_name] = [];
-    }
-
     public static function hasHandlers($class, $name, $is_transaction_event = false)
     {
         if (is_string($class)) {
@@ -169,14 +162,15 @@ class Event extends Object
     public static function transactionCommit()
     {
         self::$_in_transaction = false;
+        while (!empty(self::$_triggered_transaction_events)) {
+            $handler_set = array_shift(self::$_triggered_transaction_events);
+            call_user_func($handler_set[0], $handler_set[1]);
+        }
     }
 
-    public static function transactionEventTrigger()
+    public static function transactionRollback()
     {
-        if (!empty(self::$_triggered_transaction_events)) {
-            foreach (self::$_triggered_transaction_events as $handler_set) {
-                call_user_func($handler_set[0], $handler_set[1]);
-            }
-        }
+        self::$_in_transaction = false;
+        self::$_triggered_transaction_events = [];
     }
 }

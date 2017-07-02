@@ -107,7 +107,7 @@ class Database extends Component implements TransactionInterface
     public function rollBack()
     {
         $result = $this->connect()->rollBack();
-        Event::rollBackTransactionEvents();
+        Event::transactionRollback();
         return $result;
     }
 
@@ -115,7 +115,6 @@ class Database extends Component implements TransactionInterface
     {
         $result = $this->connect()->commit();
         Event::transactionCommit();
-        Event::transactionEventTrigger();
         return $result;
     }
 
