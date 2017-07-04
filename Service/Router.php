@@ -16,6 +16,7 @@ class Router extends Component
     private $_router;
     private $_response;
     private $_routeMap;
+    private $_routeRules;
     private $_filters;
     private $_namespace;
     private $_matchedPairs;
@@ -27,7 +28,6 @@ class Router extends Component
         parent::init();
 
         $this->_router = new Klein();
-        $this->processRouteMap();
 
         $this->_router->onError(function ($router, $errMsg, $errType, $err) {
             $event = ZJPHP::createObject([
@@ -45,8 +45,6 @@ class Router extends Component
             ]);
             $this->trigger(static::EVENT_APP_HTTP_ERROR_HAPPEN, $event);
         });
-
-        $this->routeMatch(null, $this->_response);
     }
 
     public function ip()
@@ -73,7 +71,13 @@ class Router extends Component
 
     public function setRouteMap(array $routeMap)
     {
-        $this->_routeMap = $routeMap;
+        $this->_routeMap = [];
+        if (!isset($routeMap['file']) || !file_exists($routeMap['file'])) {
+            throw new InvalidConfigException('Route map file is not defined or not exist.');
+        }
+
+        $this->_routeMap['file'] = $routeMap['file'];
+        $this->_routeMap['name'] = !empty($routeMap['name']) ? $routeMap['name'] : 'default';
     }
 
     public function setFilters(array $filters)
@@ -93,7 +97,8 @@ class Router extends Component
 
     protected function routeMatch()
     {
-        $match_result = $this->_router->routeMatch();
+        $this->processRouteMap();
+        $match_result = $this->_router->routeMatch(null, $this->_response);
         $this->_matchedPairs = $match_result['matched_pairs'];
         $this->_matched = $match_result['matched'];
         $this->_methodsMatched = $match_result['methods_matched'];
@@ -101,15 +106,33 @@ class Router extends Component
 
     protected function processRouteMap()
     {
-        $processedRouteMap = [];
+        $routeMapFile = $this->_routeMap['file'];
+        $routeMapName = $this->_routeMap['name'];
+        $mtime = filemtime($routeMapFile);
+        $apcu_enabled = function_exists('apcu_fetch');
+        
+        // Try to use cached
+        if ($apcu_enabled) {
+            $cache_exist = false;
+            $cache_mtime = apcu_fetch('int:' . RUNTIME_ENV . '_router_' . $routeMapName . '_mtime', $cache_exist);
+            if ($cache_exist !== false && $cache_mtime === $mtime) {
+                $this->_routeRules = apcu_fetch('array:' . RUNTIME_ENV . '_router_rules_' . $routeMapName);
+                $routes = apcu_fetch('object:' . RUNTIME_ENV . '_router_routes_' . $routeMapName);
+                $this->_router->resetRoutes($routes);
+                return;
+            }
+        }
 
-        if (isset($this->_routeMap['namespaces'])) {
+        $rawRouteRules = require($routeMapFile);
+        $this->_routeRules = [];
+
+        if (isset($rawRouteRules['namespaces'])) {
             $standard_mask = [
                 'dependency' => [],
                 'passArgs' => [],
                 'filters' => $this->_filters
             ];
-            foreach ($this->_routeMap['namespaces'] as $namespace => $namespace_setting) {
+            foreach ($rawRouteRules['namespaces'] as $namespace => $namespace_setting) {
                 $namespace_setting = ArrayHelper::merge($standard_mask, $namespace_setting);
 
                 foreach ($namespace_setting['rules'] as $rule_setting) {
@@ -135,21 +158,29 @@ class Router extends Component
                     // Is last
                     $is_last = (isset($rule_setting['isLast'])) ? $rule_setting['isLast'] : false;
 
-                    $callback = $this->createRouteCallback($controller, $action, $filters, $dependency, $event_callbacks, $pass_args, $is_last);
-
-                    $this->_router->respond($method, $path, $callback);
+                    $route = $this->_router->respond($method, $path, [$this, 'fakeCallback']);
+                    $route_name = spl_object_hash($route);
+                    $this->_routeRules[$route_name] = [
+                        'controller' => $controller,
+                        'action' => $action,
+                        'filters' => $filters,
+                        'dependency' => $dependency,
+                        'event_callbacks' => $event_callbacks,
+                        'pass_args' => $pass_args,
+                        'is_last' => $is_last
+                    ];
                 }
             }
         }
 
-        if (isset($this->_routeMap['singleRules'])) {
+        if (isset($rawRouteRules['singleRules'])) {
             $standard_mask = [
                 'dependency' => [],
                 'passArgs' => [],
                 'filters' => $this->_filters
             ];
 
-            foreach ($this->_routeMap['singleRules'] as $rule_setting) {
+            foreach ($rawRouteRules['singleRules'] as $rule_setting) {
                 $rule_setting = ArrayHelper::merge($standard_mask, $rule_setting);
                 // Method
                 $method = $rule_setting['method'];
@@ -172,47 +203,65 @@ class Router extends Component
 
                 $callback = $this->createRouteCallback($controller, $action, $filters, $dependency, $event_callbacks, $pass_args, $is_last);
 
-                $this->_router->respond($method, $path, $callback);
+                $route = $this->_router->respond($method, $path, [$this, 'fakeCallback']);
+                $route_name = spl_object_hash($route);
+                $this->_routeRules[$route_name] = [
+                    'controller' => $controller,
+                    'action' => $action,
+                    'filters' => $filters,
+                    'dependency' => $dependency,
+                    'event_callbacks' => $event_callbacks,
+                    'pass_args' => $pass_args,
+                    'is_last' => $is_last
+                ];
+            }
+        }
+
+        if ($apcu_enabled) {
+            $cache_rules_result = apcu_store('array:' . RUNTIME_ENV . '_router_rules_' . $routeMapName, $this->_routeRules);
+            $cache_rules_resultII = apcu_store('object:' . RUNTIME_ENV . '_router_routes_' . $this->_router->routes());
+
+            if ($cache_rules_result && $cache_rules_resultII) {
+                apcu_fetch('int:' . RUNTIME_ENV . '_router_' . $routeMapName . '_mtime', $mtime);
             }
         }
     }
 
-    protected function createRouteCallback($controller, $action, $filters, $dependency, $event_callbacks, $pass_args, $is_last)
+    public function fakeCallback($request, $response, $service, $app, $router, $route)
     {
-        $callback = function ($request, $response, $service, $app, $router) use ($controller, $action, $filters, $dependency, $event_callbacks, $pass_args, $is_last) {
-            // Pass args by app
-            foreach ($pass_args as $key => $value) {
-                $app->$key = $value;
-            }
+        // Extract varaibles from route rule
+        $route_name = spl_object_hash($route);
+        extract($this->_routeRules[$route_name]);
+        // Pass args by app
+        foreach ($pass_args as $key => $value) {
+            $app->$key = $value;
+        }
 
-            foreach ($filters as $filter) {
-                $filter_obj = ZJPHP::createObject($filter);
-                $filter_obj->filter($request, $response, $service, $app, $router);
-                unset($filter_obj);
-                if ($response->isSent()) {
-                    return false;
-                }
+        foreach ($filters as $filter) {
+            $filter_obj = ZJPHP::createObject($filter);
+            $filter_obj->filter($request, $response, $service, $app, $router);
+            unset($filter_obj);
+            if ($response->isSent()) {
+                return false;
             }
+        }
 
-            if (is_string($controller)) {
-                $controller = [
-                    'class' => $controller,
-                    'dependency' => $dependency,
-                    'callbacks' => $event_callbacks
-                ];
-            } elseif (is_array($controller)) {
-                $controller['dependency'] = isset($controller['dependency']) ? ArrayHelper::merge($dependency, $controller['dependency']) : $dependency;
-                $controller['callbacks'] = isset($controller['callbacks']) ? ArrayHelper::merge($event_callbacks, $controller['callbacks']) : $event_callbacks;
-            }
-            $controller_obj = ZJPHP::createObject($controller);
-            $controller_obj->$action($request, $response, $service, $app, $router);
+        if (is_string($controller)) {
+            $controller = [
+                'class' => $controller,
+                'dependency' => $dependency,
+                'callbacks' => $event_callbacks
+            ];
+        } elseif (is_array($controller)) {
+            $controller['dependency'] = isset($controller['dependency']) ? ArrayHelper::merge($dependency, $controller['dependency']) : $dependency;
+            $controller['callbacks'] = isset($controller['callbacks']) ? ArrayHelper::merge($event_callbacks, $controller['callbacks']) : $event_callbacks;
+        }
+        $controller_obj = ZJPHP::createObject($controller);
+        $controller_obj->$action($request, $response, $service, $app, $router);
 
-            if ($is_last) {
-                $router->skipRemaining();
-            }
-        };
-
-        return $callback;
+        if ($is_last) {
+            $router->skipRemaining();
+        }
     }
 
     public function dispatch()

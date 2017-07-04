@@ -703,22 +703,32 @@ class Security extends Component
         return $diff === 0;
     }
 
-    public function hash($data, $algo = null, $rawHash = false)
+    public function hash($data, $algo = null, $key = null, $rawHash = false)
     {
         $algo = (is_null($algo)) ? $this->macHash : $algo;
 
-        $hash = hash($algo, $data, $rawHash);
+        if (is_null($key)) {
+            $hash = hash($algo, $data, $rawHash);
+        } else {
+            $hash = hash_hmac($algo, $data, $key, $rawHash);
+        }
+        
         return $hash;
     }
 
-    public function hashFile($file, $algo = null, $rawHash = false)
+    public function hashFile($file, $algo = null, $key = null, $rawHash = false)
     {
         if (!file_exists($file)) {
             throw new InvalidCallException('File not exists.');
         }
         $algo = (is_null($algo)) ? $this->macHash : $algo;
 
-        $hash = hash_file($algo, $file, $rawHash);
+        if (is_null($key)) {
+            $hash = hash_file($algo, $file, $rawHash);
+        } else {
+            $hash = hash_hmac_file($algo, $file, $key, $rawHash);
+        }
+        
         return $hash;
     }
 }

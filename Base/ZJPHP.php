@@ -91,8 +91,9 @@ class ZJPHP
 
         if ($apcu_enabled) {
             $config_mtime = static::getAppConfigMtime($config_files);
-            $config_from_cache = apcu_fetch('array:' . RUNTIME_ENV . '_config');
-            if ($config_from_cache !== false && $config_from_cache['configMtime'] === $config_mtime) {
+            $cache_exists = false;
+            $config_from_cache = apcu_fetch('array:' . RUNTIME_ENV . '_config', $cache_exists);
+            if ($cache_exists !== false && $config_from_cache['configMtime'] === $config_mtime) {
                 return $config_from_cache;
             }
         }
@@ -138,10 +139,25 @@ class ZJPHP
     public static function getAppConfigMtime(array $config_files)
     {
         $mtime = null;
-        foreach ($config_files as $file) {
-            $temp_time = filemtime($file);
-            if ($temp_time > $mtime) {
-                $mtime = $temp_time;
+        foreach ($config_files as $configuration) {
+            if (file_exists($configuration)) {
+                $configurationInfo = pathinfo($configuration, PATHINFO_DIRNAME | PATHINFO_BASENAME | PATHINFO_FILENAME | PATHINFO_EXTENSION);
+                if (strtolower($configurationInfo['extension']) !== 'php') {
+                    continue;
+                }
+                $temp_time = filemtime($configuration);
+                if ($temp_time > $mtime) {
+                    $mtime = $temp_time;
+                }
+                if (RUNTIME_ENV !== 'production') {
+                    $runtimeConfiguration = str_replace($configurationInfo['filename'], $configurationInfo['filename'] . '-' . RUNTIME_ENV, $configuration);
+                    if (file_exists($runtimeConfiguration)) {
+                        $temp_time = filemtime($runtimeConfiguration);
+                        if ($temp_time > $mtime) {
+                            $mtime = $temp_time;
+                        }
+                    }
+                }
             }
         }
 

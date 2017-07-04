@@ -93,14 +93,6 @@ abstract class Application extends ServiceLocator
             } elseif (is_array($config['components'][$id]) && !isset($config['components'][$id]['class'])) {
                 $config['components'][$id] = ArrayHelper::merge($component, $config['components'][$id]);
             }
-
-            if ($id === 'router' && isset($config['router']) && is_array($config['router'])) {
-                if (!isset($config['components']['router']['routeMap'])) {
-                    $config['components']['router']['routeMap'] = [];
-                }
-                $config['components']['router']['routeMap'] = ArrayHelper::merge($config['components']['router']['routeMap'], $config['router']);
-                unset($config['router']);
-            }
         }
 
         if ($apcu_enabled) {
