@@ -266,6 +266,7 @@ class Router extends Component
 
     public function dispatch()
     {
+        $this->routeMatch();
         $this->_router->lazyDispatch($this->_matchedPairs, $this->_matched, $this->_methodsMatched, $this->_response);
     }
 }
