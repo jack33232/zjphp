@@ -235,7 +235,7 @@ class Router extends Component
     public static function fakeCallback($request, $response, $service, $app, $router, $matched, $methods_matched, $route)
     {
         // Extract varaibles from route rule
-        $route_name = spl_object_hash($route);
+        $route_name = $route->getName();
         $router = ZJPHP::$app->get('router');
         $routeRules = $router->getRouteRules();
         extract($routeRules[$route_name]);
