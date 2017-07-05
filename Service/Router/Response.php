@@ -80,5 +80,7 @@ class Response extends KleinResponse
             }
             $this->body($json);
         }
+
+        $this->send();
     }
 }

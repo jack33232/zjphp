@@ -35,14 +35,12 @@ class RouterErrorHandler extends Behavior
         $code = $event->code;
         $router = $event->sender;
         $logger = ZJPHP::$app->get('logger');
-        $session = ZJPHP::$app->get('session');
 
         $log_context = [
             'code' => $code,
             'uri' => $router->request()->uri(),
             'ip' => $router->request()->ip(),
-            'params' => $router->request()->params(),
-            'sessions' => ($session->getIsActive()) ? $_SESSION : null
+            'params' => $router->request()->params()
         ];
 
         $logger->notice('Http Error Happen.', $log_context);

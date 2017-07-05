@@ -270,6 +270,7 @@ abstract class Application extends ServiceLocator
     public function setEncoding($value)
     {
         mb_internal_encoding($value);
+        mb_http_output($value);
     }
 
     public function getEncoding()
