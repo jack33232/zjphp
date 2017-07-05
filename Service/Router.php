@@ -95,6 +95,11 @@ class Router extends Component
         return $this->_response = ZJPHP::createObject($definition);
     }
 
+    public function getRouteRules()
+    {
+        return $this->_routeRules;
+    }
+
     protected function routeMatch()
     {
         $this->processRouteMap();
@@ -158,8 +163,9 @@ class Router extends Component
                     // Is last
                     $is_last = (isset($rule_setting['isLast'])) ? $rule_setting['isLast'] : false;
 
-                    $route = $this->_router->respond($method, $path, [$this, 'fakeCallback']);
+                    $route = $this->_router->respond($method, $path, [get_class($this), 'fakeCallback']);
                     $route_name = spl_object_hash($route);
+                    $route->setName($route_name);
                     $this->_routeRules[$route_name] = [
                         'controller' => $controller,
                         'action' => $action,
@@ -201,10 +207,9 @@ class Router extends Component
                 // Is last
                 $is_last = (isset($rule_setting['isLast'])) ? $rule_setting['isLast'] : false;
 
-                $callback = $this->createRouteCallback($controller, $action, $filters, $dependency, $event_callbacks, $pass_args, $is_last);
-
-                $route = $this->_router->respond($method, $path, [$this, 'fakeCallback']);
+                $route = $this->_router->respond($method, $path, [get_class($this), 'fakeCallback']);
                 $route_name = spl_object_hash($route);
+                $route->setName($route_name);
                 $this->_routeRules[$route_name] = [
                     'controller' => $controller,
                     'action' => $action,
@@ -219,19 +224,21 @@ class Router extends Component
 
         if ($apcu_enabled) {
             $cache_rules_result = apcu_store('array:' . RUNTIME_ENV . '_router_rules_' . $routeMapName, $this->_routeRules);
-            $cache_rules_resultII = apcu_store('object:' . RUNTIME_ENV . '_router_routes_' . $this->_router->routes());
+            $cache_rules_resultII = apcu_store('object:' . RUNTIME_ENV . '_router_routes_' . $routeMapName, $this->_router->routes());
 
             if ($cache_rules_result && $cache_rules_resultII) {
-                apcu_fetch('int:' . RUNTIME_ENV . '_router_' . $routeMapName . '_mtime', $mtime);
+                apcu_store('int:' . RUNTIME_ENV . '_router_' . $routeMapName . '_mtime', $mtime);
             }
         }
     }
 
-    public function fakeCallback($request, $response, $service, $app, $router, $route)
+    public static function fakeCallback($request, $response, $service, $app, $router, $matched, $methods_matched, $route)
     {
         // Extract varaibles from route rule
         $route_name = spl_object_hash($route);
-        extract($this->_routeRules[$route_name]);
+        $router = ZJPHP::$app->get('router');
+        $routeRules = $router->getRouteRules();
+        extract($routeRules[$route_name]);
         // Pass args by app
         foreach ($pass_args as $key => $value) {
             $app->$key = $value;
