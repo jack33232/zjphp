@@ -69,15 +69,15 @@ class Router extends Component
         return $this->_router->request();
     }
 
-    public function setRouteMap(array $routeMap)
+    public function setRouteMap(array $route_map)
     {
         $this->_routeMap = [];
-        if (!isset($routeMap['file']) || !file_exists($routeMap['file'])) {
+        if (!isset($route_map['file']) || !file_exists($route_map['file'])) {
             throw new InvalidConfigException('Route map file is not defined or not exist.');
         }
 
-        $this->_routeMap['file'] = $routeMap['file'];
-        $this->_routeMap['name'] = !empty($routeMap['name']) ? $routeMap['name'] : 'default';
+        $this->_routeMap['file'] = $route_map['file'];
+        $this->_routeMap['name'] = !empty($route_map['name']) ? $route_map['name'] : 'default';
     }
 
     public function setFilters(array $filters)
