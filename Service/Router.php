@@ -111,33 +111,33 @@ class Router extends Component
 
     protected function processRouteMap()
     {
-        $routeMapFile = $this->_routeMap['file'];
-        $routeMapName = $this->_routeMap['name'];
-        $mtime = filemtime($routeMapFile);
+        $route_map_file = $this->_routeMap['file'];
+        $route_map_name = $this->_routeMap['name'];
+        $mtime = filemtime($route_map_file);
         $apcu_enabled = function_exists('apcu_fetch');
         
         // Try to use cached
         if ($apcu_enabled) {
             $cache_exist = false;
-            $cache_mtime = apcu_fetch('int:' . RUNTIME_ENV . '_router_' . $routeMapName . '_mtime', $cache_exist);
+            $cache_mtime = apcu_fetch('int:' . RUNTIME_ENV . '_router_' . $route_map_name . '_mtime', $cache_exist);
             if ($cache_exist !== false && $cache_mtime === $mtime) {
-                $this->_routeRules = apcu_fetch('array:' . RUNTIME_ENV . '_router_rules_' . $routeMapName);
-                $routes = apcu_fetch('object:' . RUNTIME_ENV . '_router_routes_' . $routeMapName);
+                $this->_routeRules = apcu_fetch('array:' . RUNTIME_ENV . '_router_rules_' . $route_map_name);
+                $routes = apcu_fetch('object:' . RUNTIME_ENV . '_router_routes_' . $route_map_name);
                 $this->_router->resetRoutes($routes);
                 return;
             }
         }
 
-        $rawRouteRules = require($routeMapFile);
+        $raw_route_rules = require($route_map_file);
         $this->_routeRules = [];
 
-        if (isset($rawRouteRules['namespaces'])) {
+        if (isset($raw_route_rules['namespaces'])) {
             $standard_mask = [
                 'dependency' => [],
                 'passArgs' => [],
                 'filters' => $this->_filters
             ];
-            foreach ($rawRouteRules['namespaces'] as $namespace => $namespace_setting) {
+            foreach ($raw_route_rules['namespaces'] as $namespace => $namespace_setting) {
                 $namespace_setting = ArrayHelper::merge($standard_mask, $namespace_setting);
 
                 foreach ($namespace_setting['rules'] as $rule_setting) {
@@ -179,14 +179,14 @@ class Router extends Component
             }
         }
 
-        if (isset($rawRouteRules['singleRules'])) {
+        if (isset($raw_route_rules['singleRules'])) {
             $standard_mask = [
                 'dependency' => [],
                 'passArgs' => [],
                 'filters' => $this->_filters
             ];
 
-            foreach ($rawRouteRules['singleRules'] as $rule_setting) {
+            foreach ($raw_route_rules['singleRules'] as $rule_setting) {
                 $rule_setting = ArrayHelper::merge($standard_mask, $rule_setting);
                 // Method
                 $method = $rule_setting['method'];
@@ -223,11 +223,11 @@ class Router extends Component
         }
 
         if ($apcu_enabled) {
-            $cache_rules_result = apcu_store('array:' . RUNTIME_ENV . '_router_rules_' . $routeMapName, $this->_routeRules);
-            $cache_rules_resultII = apcu_store('object:' . RUNTIME_ENV . '_router_routes_' . $routeMapName, $this->_router->routes());
+            $cache_rules_result = apcu_store('array:' . RUNTIME_ENV . '_router_rules_' . $route_map_name, $this->_routeRules);
+            $cache_rules_resultII = apcu_store('object:' . RUNTIME_ENV . '_router_routes_' . $route_map_name, $this->_router->routes());
 
             if ($cache_rules_result && $cache_rules_resultII) {
-                apcu_store('int:' . RUNTIME_ENV . '_router_' . $routeMapName . '_mtime', $mtime);
+                apcu_store('int:' . RUNTIME_ENV . '_router_' . $route_map_name . '_mtime', $mtime);
             }
         }
     }
