@@ -130,6 +130,8 @@ class Router extends Component
 
         $raw_route_rules = require($route_map_file);
         $this->_routeRules = [];
+        // Reset router route collection
+        $this->_router->resetRoutes();
 
         if (isset($raw_route_rules['namespaces'])) {
             $standard_mask = [
