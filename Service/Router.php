@@ -237,8 +237,8 @@ class Router extends Component
         // Extract varaibles from route rule
         $route_name = $route->getName();
         $router = ZJPHP::$app->get('router');
-        $routeRules = $router->getRouteRules();
-        extract($routeRules[$route_name]);
+        $route_rules = $router->getRouteRules();
+        extract($route_rules[$route_name]);
         // Pass args by app
         foreach ($pass_args as $key => $value) {
             $app->$key = $value;
