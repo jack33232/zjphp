@@ -31,11 +31,11 @@ class ZJRedis extends Component
             'database' => 0,
             'auth_passwd' => ''
         ];
-        foreach ($connections as $name => $setting) {
+        foreach ($connections as $connection => $setting) {
             if (count($connections) === 1) {
-                $name = 'default';
+                $connection = 'default';
             }
-            $this->_connectionSettings[$name] = ArrayHelper::merge($default, $setting);
+            $this->_connectionSettings[$connection] = ArrayHelper::merge($default, $setting);
         }
     }
 
@@ -63,7 +63,7 @@ class ZJRedis extends Component
             }
 
 
-            return $this->_redisClients[$name] = $redis_client;
+            return $this->_redisClients[$connection] = $redis_client;
         } catch (RedisException $e) {
             throw new DatabaseErrorException('Redis Database Failed to Connect', 503, $e);
         }
