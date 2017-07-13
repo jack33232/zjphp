@@ -57,11 +57,7 @@ class Response extends KleinResponse
         $this->body('');
         $this->noCache();
 
-        if ($option === 0) {
-            $option = JSON_NUMERIC_CHECK;
-        }
-
-        $json = json_encode($object, $option);
+        $json = json_encode($object, $option | JSON_NUMERIC_CHECK);
 
         if (null !== $jsonp_prefix) {
             // Should ideally be application/json-p once adopted

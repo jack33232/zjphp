@@ -13,7 +13,7 @@ defined('RUNTIME_DIR') or define('RUNTIME_DIR', dirname(\SCRIPT_DIR) . '/runtime
 defined('UPLOAD_DIR') or define('UPLOAD_DIR', dirname(\SCRIPT_DIR) . '/upload');
 
 $sapi_type = php_sapi_name();
-if (substr($sapi_type, 0, 3) !== 'cgi') {
+if (substr($sapi_type, 0, 3) !== 'cli') {
     defined('ROOT_URL')
         or define(
             'ROOT_URL',

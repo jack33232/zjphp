@@ -62,7 +62,6 @@ class ZJRedis extends Component
                 $redis_client->select((int) $database);
             }
 
-
             return $this->_redisClients[$connection] = $redis_client;
         } catch (RedisException $e) {
             throw new DatabaseErrorException('Redis Database Failed to Connect', 503, $e);
