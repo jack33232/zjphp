@@ -50,8 +50,8 @@ class WebAppMonitor extends Behavior
         $data = [
             $app_state,
             ($wall_time > 1000) ? sprintf('%.3fs', $wall_time / 1000) : sprintf('%.1fms', $wall_time),
-            ($memory_usage > 1024) ? sprintf('%.3fMB', $memory_usage / 1024) : sprintf('%.3KB', $memory_usage),
-            ($peak_memory > 1024) ? sprintf('%.3fMB', $peak_memory / 1024) : sprintf('%.3KB', $peak_memory)
+            ($memory_usage > 1024) ? sprintf('%.3fMB', $memory_usage / 1024) : sprintf('%.3fKB', $memory_usage),
+            ($peak_memory > 1024) ? sprintf('%.3fMB', $peak_memory / 1024) : sprintf('%.3fKB', $peak_memory)
         ];
 
         // Get Console Event

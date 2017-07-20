@@ -311,8 +311,8 @@ abstract class Application extends ServiceLocator
     {
         $app_monitor_event = new CascadingEvent('WebAppMonitor', [
             'wall_time' => (microtime(true) - $this->genesis) * 1000,
-            'memory_usage' => memory_get_usage(true) / 1024,
-            'peak_memory' => memory_get_peak_usage(true) / 1024,
+            'memory_usage' => memory_get_usage() / 1024,
+            'peak_memory' => memory_get_peak_usage() / 1024,
             'app_state' => $this->_state
         ]);
 

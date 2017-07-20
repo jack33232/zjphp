@@ -17,7 +17,7 @@ class Event extends Object
     private static $_transaction_events = [];
     private static $_triggered_transaction_events = [];
 
-    public function __construct(array $payload = null, array $config = [])
+    public function __construct(array $payload = [], array $config = [])
     {
         $this->payload = new DataCollection($payload);
         parent::__construct($config);

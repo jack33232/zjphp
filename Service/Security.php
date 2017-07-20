@@ -11,7 +11,7 @@ class Security extends Component
     /**
      * @var string The cipher to use for encryption and decryption.
      */
-    public $cipher = 'AES-128-CBC';
+    protected $cipher = 'AES-128-CBC';
     /**
      * @var array[] Look-up table of block sizes and key sizes for each supported OpenSSL cipher.
      *
@@ -67,6 +67,18 @@ class Security extends Component
      */
     public $passwordHashCost = 13;
 
+    public function getCipher()
+    {
+        return $this->cipher;
+    }
+
+    public function setCipher($value)
+    {
+        if (!array_key_exists($value, $this->allowedCiphers)) {
+            throw new InvalidParamException('Invalid Cipher');
+        }
+        $this->cipher = $value;
+    }
     /**
      * Encrypts data using a password.
      * Derives keys for encryption and authentication from the password using PBKDF2 and a random salt,

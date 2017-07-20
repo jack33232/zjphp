@@ -10,10 +10,10 @@ class CascadingEvent extends Event
     public static $traceIds = [];
     public $eventType;
 
-    public function __construct($event_type, array $payload = null, array $config = [])
+    public function __construct($event_type, array $payload = [], array $config = [])
     {
-        parent::init();
-        $this->eventType = $eventType;
+        $this->eventType = $event_type;
+        parent::__construct($payload, $config);
     }
 
     public function getTraceId()
