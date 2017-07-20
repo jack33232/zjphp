@@ -2,6 +2,7 @@
 namespace ZJPHP\Base;
 
 use ZJPHP\Base\Exception\InvalidParamException;
+use ZJPHP\Base\DataCollection;
 
 class Event extends Object
 {
@@ -9,11 +10,54 @@ class Event extends Object
     public $sender;
     public $handled = false;
     public $data;
+    public $payload;
 
     private static $_in_transaction = false;
     private static $_events = [];
     private static $_transaction_events = [];
     private static $_triggered_transaction_events = [];
+
+    public function __construct(array $payload = null, array $config = [])
+    {
+        $this->payload = new DataCollection($payload);
+        parent::__construct($config);
+    }
+
+    public function __get($name)
+    {
+        if ($this->payload->exists($name)) {
+            return $this->payload->get($name);
+        } else {
+            parent::__get($name);
+        }
+    }
+
+    public function __set($name, $value)
+    {
+        if (parent::__isset($name)) {
+            parent::__set($name, $value);
+        } else {
+            $this->payload->set($name, $value);
+        }
+    }
+
+    public function __unset($name)
+    {
+        if ($this->payload->exists($name)) {
+            $this->payload->remove($name);
+        } elseif (parent::__isset($name)) {
+            parent::__unset($name);
+        }
+    }
+
+    public function __isset($name)
+    {
+        if ($this->payload->exists($name)) {
+            return true;
+        } else {
+            return parent::__isset($name);
+        }
+    }
 
     public static function on($class, $name, $handler, $data = null, $append = true, $is_transaction_event = false)
     {

@@ -3,6 +3,7 @@ namespace ZJPHP\Service\Behavior\NotifyCenter;
 
 use ZJPHP\Base\ZJPHP;
 use ZJPHP\Base\Behavior;
+use ZJPHP\Base\Event;
 use ZJPHP\Service\NotifyCenter;
 use PC;
 
@@ -15,9 +16,9 @@ class BlastPHPConsole extends Behavior
         ];
     }
 
-    public function pcDebug($event)
+    public function pcDebug(Event $event)
     {
-        PC::debug($event->variable, $event->tag);
+        PC::debug($event->payload->get('variable'), $event->payload->get('tag'));
         $event->handled = true;
     }
 }

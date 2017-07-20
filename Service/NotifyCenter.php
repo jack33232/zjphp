@@ -4,6 +4,7 @@ namespace ZJPHP\Service;
 use ZJPHP\Base\ZJPHP;
 use ZJPHP\Base\Component;
 use ZJPHP\Base\Kit\ArrayHelper;
+use ZJPHP\Base\Event;
 
 class NotifyCenter extends Component
 {
@@ -13,39 +14,41 @@ class NotifyCenter extends Component
     
     public function buildBlastPHPConsoleEvent($variable, $tag = 'debug')
     {
-        $definition = [
-            'class' => 'NotifyBlastPHPConsoleEvent',
+        $payload = [
             'variable' => $variable,
             'tag' => $tag
         ];
 
-        return ZJPHP::createObject($definition);
+        return new Event($payload);
     }
 
     public function buildSendEmailEvent(array $params, $throw_exception = true)
     {
         $params_mask = [
-            'class', 'to', 'from', 'cc', 'bcc', 'replyTo',
+            'to', 'from', 'cc', 'bcc', 'replyTo',
             'smtp', 'attachment', 'isHTML', 'purifyHTML',
             'subject', 'body', 'altBody', 'priority'
         ];
-        $default_params = [
-            'class' => 'NotifySendEmailEvent',
+        $default_payload = [
             'altBody' => 'Please use email client which has the ability to view HTML.',
             'attachment' => [],
             'purifyHTML' => false,
             'isHTML' => true,
+            'subject' => 'Email Send From ZJPHP',
             'body' => '',
-            'priority' => null // null (default), 1 = High, 3 = Normal, 5 = low.
+            'priority' => null, // null (default), 1 = High, 3 = Normal, 5 = low.
+            'result' => null,
+            'errMsg' => null
         ];
 
-        $definition = ArrayHelper::mask($params_mask, $params, $default_params);
+        $payload = ArrayHelper::mask($params_mask, $params, $default_payload);
 
-        if (!$this->validateEmailSetting($definition, $throw_exception)) {
+        $this->uniformEmailAddr($payload);
+        if (!$this->validateEmailSetting($payload, $throw_exception)) {
             return false;
         }
 
-        return ZJPHP::createObject($definition);
+        return new Event($payload);
     }
 
     public function buildQueueEmailEvent(array $params, $throw_exception = true)
@@ -60,8 +63,7 @@ class NotifyCenter extends Component
         $email_body = $send_email_event->body;
         $send_email_event->body = null;
 
-        $definition = [
-            'class' => 'NotifyQueueEmailEvent',
+        $payload = [
             'bindingKey' => (isset($params['bindingKey'])) ? $params['bindingKey'] : 'default',
             'sendEmailEvent' => $send_email_event,
             'body' => $email_body,
@@ -69,7 +71,7 @@ class NotifyCenter extends Component
             'renderData' => (isset($params['renderData'])) ? $params['renderData'] : null,
             'scheduledAt' => (isset($params['scheduledAt']) && $temp = strtotime($params['scheduledAt'])) ? date('Y-m-d H:i:s', $temp) : date('Y-m-d H:i:s')
         ];
-        return ZJPHP::createObject($definition);
+        return new Event($payload);
     }
 
     protected function validateEmailSetting(array $params, $throw_exception = true)
@@ -84,61 +86,25 @@ class NotifyCenter extends Component
             'priority' => 'in:1,3,5',
             'subject' => 'string',
             'body' => 'string',
-            'altBody' => 'string'
+            'altBody' => 'string',
+            'from' => 'sometimes|required|array',
+            'from.email' => 'email|max:65',
+            'from.name' => 'string',
+            'to' => 'required|array',
+            'to.*.email' => 'email|max:65',
+            'to.*.name' => 'string',
+            'cc' => 'sometimes|required|array',
+            'cc.*.email' => 'email|max:65',
+            'cc.*.name' => 'string',
+            'bcc' => 'sometimes|required|array',
+            'bcc.*.email' => 'email|max:65',
+            'bcc.*.name' => 'string',
+            'replyTo' => 'sometimes|required|array',
+            'replyTo.*.email' => 'email|max:65',
+            'replyTo.*.name' => 'string'
         ];
 
         $validator = $validation->make($params, $validationRule);
-
-        // Conditional validation for email "from"
-        $validator->sometimes('from', 'email|max:65', function ($data) {
-            return is_string($data->from);
-        });
-        $validator->sometimes('from.email', 'email|max:65', function ($data) {
-            return is_array($data->from);
-        });
-        $validator->sometimes('from.name', 'present|string', function ($data) {
-            return is_array($data->from);
-        });
-        // Conditional validation for email "to"
-        $validator->sometimes('to', 'required|email|max:65', function ($data) {
-            return is_string($data->to);
-        });
-        $validator->sometimes('to.*.email', 'required|email|max:65', function ($data) {
-            return is_array($data->to);
-        });
-        $validator->sometimes('to.*.name', 'present|string', function ($data) {
-            return is_array($data->to);
-        });
-        // Conditional validation for email "cc"
-        $validator->sometimes('cc', 'email|max:65', function ($data) {
-            return is_string($data->cc);
-        });
-        $validator->sometimes('cc.*.email', 'email|max:65', function ($data) {
-            return is_array($data->cc);
-        });
-        $validator->sometimes('cc.*.name', 'present|string', function ($data) {
-            return is_array($data->cc);
-        });
-        // Conditional validation for email "bcc"
-        $validator->sometimes('bcc', 'email|max:65', function ($data) {
-            return is_string($data->bcc);
-        });
-        $validator->sometimes('bcc.*.email', 'email|max:65', function ($data) {
-            return is_array($data->bcc);
-        });
-        $validator->sometimes('bcc.*.name', 'present|string', function ($data) {
-            return is_array($data->bcc);
-        });
-        // Conditional validation for email "replyTo"
-        $validator->sometimes('replyTo', 'email|max:65', function ($data) {
-            return is_string($data->replyTo);
-        });
-        $validator->sometimes('replyTo.*.email', 'email|max:65', function ($data) {
-            return is_array($data->replyTo);
-        });
-        $validator->sometimes('replyTo.*.name', 'present|string', function ($data) {
-            return is_array($data->replyTo);
-        });
 
         if ($validator->fails()) {
             if ($throw_exception) {
@@ -149,5 +115,41 @@ class NotifyCenter extends Component
         }
 
         return true;
+    }
+
+    protected function uniformEmailAddr(&$payload)
+    {
+        $email_addr_fields = [
+            'from',
+            'to',
+            'cc',
+            'bcc',
+            'replyTo'
+        ];
+        foreach ($payload as $key => $item) {
+            if (in_array($key, $email_addr_fields)) {
+                $single = false;
+                if ($key === 'from') {
+                    $single = true;
+                }
+                $result = [];
+                if (is_string($item)) {
+                    $result[] = ['email' => $item, 'name' => ''];
+                } elseif (is_array($item)) {
+                    $processor = function ($sub_item) {
+                        if (is_string($sub_item)) {
+                            return ['email' => $sub_item, 'name' => ''];
+                        } elseif (is_array($sub_item) && count($sub_item) === 2) {
+                            $temp = array_values($sub_item);
+                            return ['email' => $sub_item[0], 'name' => $sub_item[1]];
+                        }
+                    };
+                    $result = array_map($processor, $item);
+                }
+                $payload[$key] = ($single) ? reset($result) : $result;
+            }
+        }
+
+        return $payload;
     }
 }

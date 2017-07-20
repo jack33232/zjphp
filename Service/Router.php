@@ -3,16 +3,15 @@ namespace ZJPHP\Service;
 
 use ZJPHP\Base\Component;
 use ZJPHP\Base\ZJPHP;
+use ZJPHP\Base\Event;
 use ZJPHP\Base\Application;
 use ZJPHP\Base\Exceptions\InvalidConfigException;
 use ZJPHP\Base\Kit\ArrayHelper;
+use ZJPHP\Service\Debugger;
 use Klein\Klein;
 
 class Router extends Component
 {
-    const EVENT_APP_ERROR_HAPPEN = 'appErrorHappen';
-    const EVENT_APP_HTTP_ERROR_HAPPEN = 'appHttpErrorHappen';
-
     private $_router;
     private $_response;
     private $_routeMap;
@@ -30,20 +29,20 @@ class Router extends Component
         $this->_router = new Klein();
 
         $this->_router->onError(function ($router, $errMsg, $errType, $err) {
-            $event = ZJPHP::createObject([
-                'class' => 'RuntimeErrorEvent',
-                'sender' => $router,
-                'err' => $err
-            ]);
-            $this->trigger(static::EVENT_APP_ERROR_HAPPEN, $event);
+            $payload = [
+                'error' => $err
+            ];
+            $event = new Event($payload);
+            $debugger = ZJPHP::$app->get('debugger');
+            $debugger->trigger(Debugger::EVENT_RUNTIME_ERROR_HAPPEN, $event);
         });
         $this->_router->onHttpError(function ($code, $router) {
-            $event = ZJPHP::createObject([
-                'class' => 'RuntimeHttpErrorEvent',
-                'sender' => $router,
+            $payload = [
                 'code' => $code
-            ]);
-            $this->trigger(static::EVENT_APP_HTTP_ERROR_HAPPEN, $event);
+            ];
+            $event = new Event($payload);
+            $debugger = ZJPHP::$app->get('debugger');
+            $debugger->trigger(Debugger::EVENT_RUNTIME_HTTP_ERROR_HAPPEN, $event);
         });
     }
 

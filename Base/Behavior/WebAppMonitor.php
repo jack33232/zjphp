@@ -5,6 +5,7 @@ use ZJPHP\Base\ZJPHP;
 use ZJPHP\Base\Behavior;
 use ZJPHP\Base\Application;
 use ZJPHP\Service\NotifyCenter;
+use ZJPHP\Base\CascadingEvent;
 
 class WebAppMonitor extends Behavior
 {
@@ -18,33 +19,63 @@ class WebAppMonitor extends Behavior
         ];
     }
 
-    public function doMonitor($app_monitor_event)
+    public function doMonitor(CascadingEvent $app_monitor_event)
     {
-        $notifyCenter = ZJPHP::$app->get('notifyCenter');
-        $db = ZJPHP::$app->get('db');
+        // Begin cascading
+        if ($app_monitor_event->name === Application::EVENT_INIT_APP) {
+            $app_monitor_event->beginCascading();
+        }
+        // Handle event
+        $this->saveToDb($app_monitor_event);
+        if (RUNTIME_ENV === 'dev') {
+            $this->blastConsoleEvent($app_monitor_event);
+        }
+        // End cascading
+        if ($app_monitor_event->name === Application::EVENT_END_APP) {
+            $app_monitor_event->endCascading();
+        }
+    }
+
+    protected function blastConsoleEvent($app_monitor_event)
+    {
+        // Notify Center Service
+        $notify_center = ZJPHP::$app->get('notifyCenter');
+        // Payload data
         $trace_id = $app_monitor_event->getTraceId();
+        $wall_time = $app_monitor_event->payload->get('wall_time');
+        $app_state = $app_monitor_event->payload->get('app_state');
+        $memory_usage = $app_monitor_event->payload->get('memory_usage');
+        $peak_memory = $app_monitor_event->payload->get('peak_memory');
 
         $data = [
-            $app_monitor_event->timestamp,
-            $app_monitor_event->appState,
-            number_format($app_monitor_event->serverStatus['memory'] / 1024, 3). 'KB',
-            number_format($app_monitor_event->serverStatus['peak_memory'] / 1024, 3). 'KB'
+            $app_state,
+            ($wall_time > 1000) ? sprintf('%.3fs', $wall_time / 1000) : sprintf('%.1fms', $wall_time),
+            ($memory_usage > 1024) ? sprintf('%.3fMB', $memory_usage / 1024) : sprintf('%.3KB', $memory_usage),
+            ($peak_memory > 1024) ? sprintf('%.3fMB', $peak_memory / 1024) : sprintf('%.3KB', $peak_memory)
         ];
-        
 
-        $blastPHPConsoleEvent = $notifyCenter->buildBlastPHPConsoleEvent($data, $trace_id);
-        $notifyCenter->trigger(NotifyCenter::EVENT_BLAST_PHP_CONSOLE, $blastPHPConsoleEvent);
+        // Get Console Event
+        $php_console_event = $notify_center->buildBlastPHPConsoleEvent($data, $trace_id);
+        $notify_center->trigger(NotifyCenter::EVENT_BLAST_PHP_CONSOLE, $php_console_event);
+    }
 
-        unset($data);
-        // Save into DB
+    protected function saveToDb($app_monitor_event)
+    {
+        // DB Service
+        $db = ZJPHP::$app->get('db');
+        // Payload data
+        $trace_id = $app_monitor_event->getTraceId();
+        $wall_time = $app_monitor_event->payload->get('wall_time');
+        $app_state = $app_monitor_event->payload->get('app_state');
+        $memory_usage = $app_monitor_event->payload->get('memory_usage');
+        $peak_memory = $app_monitor_event->payload->get('peak_memory');
+        // Save
         $db->table(static::TABLE_NAME)->insert([
-            'trace_id' => $trace_id,
-            'timestamp' => $app_monitor_event->timestamp,
-            'memory_usage' => $app_monitor_event->serverStatus['memory'],
-            'peak_memory' => $app_monitor_event->serverStatus['peak_memory'],
-            'app_state' => $app_monitor_event->appState,
-            'request' => json_encode($app_monitor_event->request),
-            'response' => json_encode($app_monitor_event->response),
+            'trace_id' => $app_monitor_event->getTraceId(),
+            'wall_time' => $app_monitor_event->payload->get('wall_time'),
+            'memory_usage' => $app_monitor_event->payload->get('memory_usage'),
+            'peak_memory' => $app_monitor_event->payload->get('peak_memory'),
+            'app_state' => $app_monitor_event->payload->get('app_state'),
             'created_at' => date('Y-m-d H:i:s')
         ]);
     }

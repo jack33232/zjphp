@@ -1,5 +1,5 @@
 <?php
-namespace ZJPHP\Service\Behavior;
+namespace ZJPHP\Service\Behavior\Debugger;
 
 use ZJPHP\Base\ZJPHP;
 use ZJPHP\Base\Behavior;
@@ -10,7 +10,7 @@ use PhpConsole\Handler as PHPConsoleHandler;
 use PhpConsole\Helper as PHPConsoleHelper;
 use PhpConsole\Storage\File as PHPConsoleStorageFile;
 
-class DebugPHPConsole extends Behavior
+class ErrorConsole extends Behavior
 {
     private $_phpConsoleConfig = [
         'stripBasePath' => false,

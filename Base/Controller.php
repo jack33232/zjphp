@@ -55,7 +55,7 @@ class Controller extends Component
             $class = $event_binding['class'];
             if (!class_exists($class) && ZJPHP::$container->has($class)) {
                 $class = ZJPHP::$container->getDefinitions($class)['class'];
-            } else {
+            } elseif (!class_exists($class)) {
                 throw new InvalidConfigException('Not found class "' . $class . '".', 500);
             }
 

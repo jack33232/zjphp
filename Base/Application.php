@@ -5,6 +5,7 @@ use ZJPHP\DI\Container;
 use ZJPHP\DI\ServiceLocator;
 use ZJPHP\Base\Kit\ArrayHelper;
 use ZJPHP\Base\ZJPHP;
+use ZJPHP\Base\CascadingEvent;
 use ZJPHP\Base\Exception\InvalidConfigException;
 use ZJPHP\Base\BootstrapInterface;
 
@@ -21,40 +22,23 @@ abstract class Application extends ServiceLocator
     private $_appName = '';
     private $_appVersion = '';
     private $_appConfigMtime = null;
+
+    protected $genesis;
+    protected $dependency = [
+        'normal' => [],
+        'singleton' => []
+    ];
     protected $bootstrap = [
         'debugger',
         'session',
         'translation'
     ];
 
-    protected $dependency = [
-        'normal' => [
-            'AppMonitorEvent' => [
-                'class' => 'ZJPHP\\Base\\Event\\WebAppMonitor'
-            ],
-            'NotifySendEmailEvent' => [
-                'class' => 'ZJPHP\\Service\\Event\\SendEmail'
-            ],
-            'NotifyQueueEmailEvent' => [
-                'class' => 'ZJPHP\\Service\\Event\\QueueEmail'
-            ],
-            'NotifyBlastPHPConsoleEvent' => [
-                'class' => 'ZJPHP\\Service\\Event\\BlastPHPConsole'
-            ],
-            'RuntimeErrorEvent' => 'ZJPHP\\Service\\Event\\RuntimeError',
-            'RuntimeHttpErrorEvent' => 'ZJPHP\\Service\\Event\\RuntimeHttpError'
-        ],
-        'singleton' => [
-            'RouterResponse' => [
-                'class' => 'ZJPHP\\Service\\Router\\Response'
-            ]
-        ]
-    ];
-
     private $_maintainSetting = [];
 
     public function __construct(array $config = [])
     {
+        $this->genesis = microtime(true);
         ZJPHP::$container = new Container();
         ZJPHP::$app = $this;
         $this->_state = self::STATE_BEGIN;
@@ -74,7 +58,7 @@ abstract class Application extends ServiceLocator
 
         $this->_state = self::STATE_INIT;
         if (RUNTIME_ENV !== 'production') {
-            $app_monitor_event = ZJPHP::createObject('AppMonitorEvent');
+            $app_monitor_event = $this->buildAppMonitorEvent();
             $this->trigger(self::EVENT_INIT_APP, $app_monitor_event);
         }
     }
@@ -112,9 +96,8 @@ abstract class Application extends ServiceLocator
                  'class' => 'ZJPHP\\Service\\Router',
                  'routeMap' => [],
                  'filters' => [],
-                 'response' => 'RouterResponse',
-                 'namespace' => '',
-                 'as DefaultRouteErrorHandler' => 'ZJPHP\\Service\\Behavior\\RouterErrorHandler'
+                 'response' => 'ZJPHP\\Service\\Router\\Response',
+                 'namespace' => ''
             ],
             'cache' => [
                 'class' => 'ZJPHP\\Service\\Cache',
@@ -154,7 +137,8 @@ abstract class Application extends ServiceLocator
             ],
             'debugger' => [
                 'class' => 'ZJPHP\\Service\\Debugger',
-                'reportLevel' => E_ERROR | E_WARNING
+                'reportLevel' => E_ERROR | E_WARNING,
+                'as ErrorLogger' => 'ZJPHP\\Service\\Behavior\\Debugger\\ErrorLogger'
             ],
             'validation' => [
                 'class' => 'ZJPHP\\Service\\Validation'
@@ -202,7 +186,7 @@ abstract class Application extends ServiceLocator
         // Finish
         $this->_state = self::STATE_END;
         if (RUNTIME_ENV !== 'production') {
-            $app_monitor_event = ZJPHP::createObject('AppMonitorEvent');
+            $app_monitor_event = $this->buildAppMonitorEvent();
             $this->trigger(self::EVENT_END_APP, $app_monitor_event);
         }
     }
@@ -316,6 +300,23 @@ abstract class Application extends ServiceLocator
                 ZJPHP::$container->setSingleton($alias, $definition);
             }
         }
+    }
+
+    public function getGenesis()
+    {
+        return $this->genesis;
+    }
+
+    public function buildAppMonitorEvent()
+    {
+        $app_monitor_event = new CascadingEvent('WebAppMonitor', [
+            'wall_time' => (microtime(true) - $this->genesis) * 1000,
+            'memory_usage' => memory_get_usage(true) / 1024,
+            'peak_memory' => memory_get_peak_usage(true) / 1024,
+            'app_state' => $this->_state
+        ]);
+
+        return $app_monitor_event;
     }
 
     protected function bootstrap()
