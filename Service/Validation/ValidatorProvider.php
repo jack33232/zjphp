@@ -29,14 +29,14 @@ class ValidatorProvider extends ServiceProvider
         $this->register();
     }
 
-    protected function register()
+    public function register()
     {
         $this->registerTranslator();
         $this->registerValidationResolverHook();
         $this->registerPresenceVerifier();
     }
 
-    protected function registerTranslator()
+    public function registerTranslator()
     {
         $this->container->bind('translator', function () {
             $translator = ZJPHP::$app->get('translation')->getTranslator();
