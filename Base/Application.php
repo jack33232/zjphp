@@ -16,6 +16,7 @@ abstract class Application extends ServiceLocator
 
     const STATE_BEGIN = 'begin';
     const STATE_INIT = 'init';
+    const STATE_START = 'start';
     const STATE_END = 'finish';
 
     private $_state;
@@ -181,6 +182,7 @@ abstract class Application extends ServiceLocator
 
     public function run()
     {
+        $this->_state = self::STATE_START;
         // Go to real logic
         $this->handleRequest();
         // Finish
