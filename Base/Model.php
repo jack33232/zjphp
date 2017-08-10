@@ -10,8 +10,8 @@ use ReflectionClass;
 class Model extends Component
 {
     protected $activeRecord;
-    protected $ormTable;
-    protected $ormPK;
+    public static $ormTable;
+    public static $ormPK;
 
     public function __construct($obj, $config = [])
     {
@@ -70,9 +70,9 @@ class Model extends Component
 
     protected function passiveRetrieveActiveRecord()
     {
-        if (isset($this->ormTable) && isset($this->ormPK) && property_exists($this->activeRecord, $this->ormPK)) {
+        if (isset(static::$ormTable) && isset(static::$ormPK) && property_exists($this->activeRecord, static::$ormPK)) {
             $db = ZJPHP::$app->get('db');
-            $this->activeRecord = $db->table($this->ormTable)->where($this->ormPK, $this->activeRecord->{$this->ormPK})->first();
+            $this->activeRecord = $db->table(static::$ormTable)->where(static::$ormPK, $this->activeRecord->{static::$ormPK})->first();
         }
     }
 }
