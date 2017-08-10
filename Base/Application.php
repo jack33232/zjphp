@@ -19,10 +19,9 @@ abstract class Application extends ServiceLocator
     const STATE_START = 'start';
     const STATE_END = 'finish';
 
-    private $_state;
-    private $_appName = '';
-    private $_appVersion = '';
-    private $_appConfigMtime = null;
+    protected $state;
+    protected $appName = 'ZJPHP_APP';
+    protected $appVersion = '';
 
     protected $genesis;
     protected $dependency = [
@@ -42,7 +41,7 @@ abstract class Application extends ServiceLocator
         $this->genesis = microtime(true);
         ZJPHP::$container = new Container();
         ZJPHP::$app = $this;
-        $this->_state = self::STATE_BEGIN;
+        $this->state = self::STATE_BEGIN;
 
         if (isset($config['configMtime'])) {
             $config = apcu_fetch('array:' . RUNTIME_ENV . '_config');
@@ -57,7 +56,7 @@ abstract class Application extends ServiceLocator
         $this->bootstrap();
         // Create app monitor event object & trigger App initialization event
 
-        $this->_state = self::STATE_INIT;
+        $this->state = self::STATE_INIT;
         if (RUNTIME_ENV !== 'production') {
             $app_monitor_event = $this->buildAppMonitorEvent();
             $this->trigger(self::EVENT_INIT_APP, $app_monitor_event);
@@ -182,11 +181,11 @@ abstract class Application extends ServiceLocator
 
     public function run()
     {
-        $this->_state = self::STATE_START;
+        $this->state = self::STATE_START;
         // Go to real logic
         $this->handleRequest();
         // Finish
-        $this->_state = self::STATE_END;
+        $this->state = self::STATE_END;
         if (RUNTIME_ENV !== 'production') {
             $app_monitor_event = $this->buildAppMonitorEvent();
             $this->trigger(self::EVENT_END_APP, $app_monitor_event);
@@ -200,24 +199,14 @@ abstract class Application extends ServiceLocator
         return [];
     }
 
-    public function setConfigMtime($mtime)
-    {
-        return $this->_appConfigMtime = $mtime;
-    }
-
-    public function getConfigMtime()
-    {
-        return $this->_appConfigMtime;
-    }
-
     public function getState()
     {
-        return $this->_state;
+        return $this->state;
     }
 
     public function setState($state)
     {
-        return $this->_state = $state;
+        return $this->state = $state;
     }
 
     public function setTimeZone($value)
@@ -237,8 +226,8 @@ abstract class Application extends ServiceLocator
             $all_settings = json_decode(file_get_contents($setting['file']), true);
             $setting_id = (!empty($setting['app_name']))
                 ? $setting['app_name']
-                : (!empty($this->_appName)
-                    ? $this->_appName
+                : (!empty($this->appName)
+                    ? $this->appName
                     : null);
             if ($setting_id) {
                 $this->_maintainSetting = $all_settings[$setting_id];
@@ -271,22 +260,22 @@ abstract class Application extends ServiceLocator
 
     public function getAppName()
     {
-        return $this->_appName;
+        return $this->appName;
     }
 
     public function setAppName($name)
     {
-        return $this->_appName = $name;
+        return $this->appName = $name;
     }
 
     public function getAppVersion()
     {
-        return $this->_appVersion;
+        return $this->appVersion;
     }
 
     public function setAppVersion($version)
     {
-        return $this->_appVersion = $version;
+        return $this->appVersion = $version;
     }
 
     public function setDependency($setting)
@@ -311,11 +300,11 @@ abstract class Application extends ServiceLocator
 
     public function buildAppMonitorEvent()
     {
-        $app_monitor_event = new CascadingEvent('WebAppMonitor', [
+        $app_monitor_event = new CascadingEvent($this->appName, [
             'wall_time' => (microtime(true) - $this->genesis) * 1000,
             'memory_usage' => memory_get_usage() / 1024,
             'peak_memory' => memory_get_peak_usage() / 1024,
-            'app_state' => $this->_state
+            'app_state' => $this->state
         ]);
 
         return $app_monitor_event;

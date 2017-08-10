@@ -11,6 +11,8 @@ use Throwable;
 
 abstract class CliApplication extends Application
 {
+    protected $appName = 'ZJPHP_CLI_APP';
+
     protected $bootstrap = [
         'debugger',
         'translation'
@@ -102,7 +104,7 @@ abstract class CliApplication extends Application
 
     public function run ()
     {
-        $this->_state = self::STATE_START;
+        $this->state = self::STATE_START;
         $this->genesis = microtime(true);
         // Go to real logic
         try {
@@ -124,24 +126,10 @@ abstract class CliApplication extends Application
             $debugger->trigger(Debugger::EVENT_RUNTIME_ERROR_HAPPEN, $event);
         }
         // Finish
-        $this->_state = self::STATE_END;
+        $this->state = self::STATE_END;
         if (RUNTIME_ENV !== 'production') {
             $app_monitor_event = $this->buildAppMonitorEvent();
             $this->trigger(self::EVENT_END_APP, $app_monitor_event);
         }
-    }
-
-    abstract public function handleRequest();
-
-    public function buildAppMonitorEvent()
-    {
-        $app_monitor_event = new CascadingEvent('CliAppMonitor', [
-            'wall_time' => (microtime(true) - $this->genesis) * 1000,
-            'memory_usage' => memory_get_usage() / 1024,
-            'peak_memory' => memory_get_peak_usage() / 1024,
-            'app_state' => $this->_state
-        ]);
-
-        return $app_monitor_event;
     }
 }
