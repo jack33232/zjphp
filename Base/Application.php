@@ -34,6 +34,7 @@ abstract class Application extends ServiceLocator
         'translation'
     ];
 
+    private $_appConfigMtime = null;
     private $_maintainSetting = [];
 
     public function __construct(array $config = [])
@@ -296,6 +297,16 @@ abstract class Application extends ServiceLocator
     public function getGenesis()
     {
         return $this->genesis;
+    }
+
+    public function setConfigMtime($mtime)
+    {
+        return $this->_appConfigMtime = $mtime;
+    }
+
+    public function getConfigMtime()
+    {
+        return $this->_appConfigMtime;
     }
 
     public function buildAppMonitorEvent()
