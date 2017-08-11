@@ -68,6 +68,11 @@ class Router extends Component
         return $this->_router->request();
     }
 
+    public function getApp()
+    {
+        return $this->_router->app();
+    }
+
     public function setRouteMap(array $route_map)
     {
         $this->_routeMap = [];
