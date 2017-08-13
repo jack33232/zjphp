@@ -43,6 +43,11 @@ class Database extends Component implements TransactionInterface
         return $this->_capsule->getConnection($connection)->getPdo();
     }
 
+    public function getLastInsertId($connection = 'default')
+    {
+        return $this->_capsule->getConnection($connection)->getPdo()->lastInsertId();
+    }
+
     public function connect($fetech_mode = PDO::FETCH_OBJ, $fetch_argument = null, $connection = 'default', array $fetch_constructor_argument = [])
     {
         $connection_instance = Capsule::connection($connection);
