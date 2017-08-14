@@ -30,7 +30,7 @@ class CastingMold extends Component
     {
         if ($isNested) {
             foreach ($data as $indx => $childData) {
-                $this->formatData($fieldRules, $data[$indx], false);
+                $data[$indx] = $this->formatData($fieldRules, $childData, false);
             }
         } else {
             foreach ($fieldRules as $field => $rules) {
