@@ -27,11 +27,6 @@ class CliAppMonitor extends Behavior
         }
         // Handle event
         $this->saveToDb($app_monitor_event);
-
-        // End cascading
-        if ($app_monitor_event->name === Application::EVENT_END_APP) {
-            $app_monitor_event->endCascading();
-        }
     }
 
     protected function saveToDb($app_monitor_event)

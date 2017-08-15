@@ -31,6 +31,8 @@ class Database extends Component implements TransactionInterface
         $capsule->setAsGlobal();
         //$capsule->bootEloquent();
         $this->_capsule = $capsule;
+
+        register_shutdown_function([$this, 'onShutDown']);
     }
 
     public function getDBManager()
@@ -131,5 +133,14 @@ class Database extends Component implements TransactionInterface
     public function getQueryLog()
     {
         return Capsule::getQueryLog();
+    }
+
+    public function onShutDown()
+    {
+        $database_manager = $this->getDBManager();
+        $all_connections = $database_manager->getConnections();
+        foreach ($all_connections as $name => $connection) {
+            $connection->disconnect();
+        }
     }
 }

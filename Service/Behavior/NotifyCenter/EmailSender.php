@@ -33,7 +33,7 @@ class EmailSender extends Behavior
         // Init mailer or get it from cache
         $mail = $this->getMailer($server_name, $setting);
 
-        $this->processEmailAddr($mail, $setting);
+        $this->processEmailAddr($send_email_event, $mail, $setting);
 
         foreach ($send_email_event->payload->get('attachment') as $attachment) {
             if (!file_exists($attachment)) {
@@ -118,7 +118,7 @@ class EmailSender extends Behavior
         return $mail;
     }
 
-    protected function processEmailAddr($mail, $setting)
+    protected function processEmailAddr($send_email_event, $mail, $setting)
     {
         if (!$send_email_event->payload->exists('from')) {
             $send_email_event->payload->set('from', $setting['username']);
