@@ -95,12 +95,16 @@ class Debugger extends Component implements BootstrapInterface
 
         $sapi_type = php_sapi_name();
         if (substr($sapi_type, 0, 3) == 'cli') {
-            // Send kill signal if posix ext loaded
+            // Send interupt signal if posix ext loaded
             if (extension_loaded('posix')) {
                 $pid = posix_getpid();
-                posix_kill($pid, 0);
+                $ppid = posix_getppid();
+                if ($ppid) {
+                    posix_kill($ppid, SIGINT);
+                } else {
+                    posix_kill($pid, SIGINT);
+                }
             }
-            $pid = getmypid();
         } else {
             exit(1);
         }
