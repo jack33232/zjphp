@@ -92,7 +92,18 @@ class Debugger extends Component implements BootstrapInterface
         // Trigger event
         $exception_event = new Event($payload);
         $this->trigger(self::EVENT_UNCAUGHT_EXCEPTION_HAPPEN, $exception_event);
-        exit(1);
+
+        $sapi_type = php_sapi_name();
+        if (substr($sapi_type, 0, 3) == 'cli') {
+            // Send kill signal if posix ext loaded
+            if (extension_loaded('posix')) {
+                $pid = posix_getpid();
+                posix_kill($pid, 0);
+            }
+            $pid = getmypid();
+        } else {
+            exit(1);
+        }
     }
 
     public function setReportLevel($level)
