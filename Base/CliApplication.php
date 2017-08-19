@@ -108,10 +108,6 @@ abstract class CliApplication extends Application
         $this->genesis = microtime(true);
         // Go to real logic
         try {
-            if ($this->has('db', true)) {
-                $db = $this->get('db');
-                $db->disconnect('all connections');
-            }
             $args = func_get_args();
             call_user_func_array([$this, 'handleRequest'], $args);
         } catch (Exception $err) {
@@ -134,6 +130,10 @@ abstract class CliApplication extends Application
         if (RUNTIME_ENV !== 'production') {
             $app_monitor_event = $this->buildAppMonitorEvent();
             $this->trigger(self::EVENT_END_APP, $app_monitor_event);
+        }
+        if ($this->has('db', true)) {
+            $db = $this->get('db');
+            $db->disconnect('all connections');
         }
     }
 }
