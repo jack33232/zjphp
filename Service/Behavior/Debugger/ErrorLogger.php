@@ -33,7 +33,7 @@ class ErrorLogger extends Behavior
             $event->payload->get('errline'),
             $event->payload->get('errfile')
         );
-        $logger->notice($msg);
+        $logger->error($msg);
     }
 
     public function logWarning(Event $event)
@@ -48,7 +48,7 @@ class ErrorLogger extends Behavior
             $event->payload->get('errline'),
             $event->payload->get('errfile')
         );
-        $logger->notice($msg);
+        $logger->warning($msg);
     }
 
     public function logNotice(Event $event)
