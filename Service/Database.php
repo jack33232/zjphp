@@ -137,9 +137,21 @@ class Database extends Component implements TransactionInterface
 
     public function onShutDown()
     {
+        $this->disconnect('all connections');
+    }
+
+    public function disconnect($connection = 'default')
+    {
         $database_manager = $this->getDBManager();
-        $all_connections = $database_manager->getConnections();
-        foreach ($all_connections as $name => $connection) {
+        $connections_to_kill = [];
+
+        if ($connection === 'all connections') {
+            $connections_to_kill = $database_manager->getConnections();
+        } else {
+            $connections_to_kill[$connection] = $database_manager->connection($connection);
+        }
+        
+        foreach ($connections_to_kill as $name => $connection) {
             $connection->disconnect();
         }
     }

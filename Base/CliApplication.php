@@ -110,6 +110,10 @@ abstract class CliApplication extends Application
         try {
             $args = func_get_args();
             call_user_func_array([$this, 'handleRequest'], $args);
+            if ($this->has('db', true)) {
+                $db = $this->get('db');
+                $db->disconnect('all connections');
+            }
         } catch (Exception $err) {
             $payload = [
                 'error' => $err
