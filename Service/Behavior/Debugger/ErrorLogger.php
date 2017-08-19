@@ -25,13 +25,14 @@ class ErrorLogger extends Behavior
     {
         $logger = ZJPHP::$app->get('logger');
 
-        $msg_tpl = "[%s] %s \n Error on line %s in file %s";
+        $msg_tpl = "[%s] %s \n Error on line %s in file %s with context \n %s";
         $msg = sprintf(
             $msg_tpl,
             $event->payload->get('errno'),
             $event->payload->get('errstr'),
             $event->payload->get('errline'),
-            $event->payload->get('errfile')
+            $event->payload->get('errfile'),
+            $event->payload->get('errcontext')
         );
         $logger->error($msg);
     }
@@ -40,13 +41,14 @@ class ErrorLogger extends Behavior
     {
         $logger = ZJPHP::$app->get('logger');
 
-        $msg_tpl = "[%s] %s \n Warning on line %s in file %s";
+        $msg_tpl = "[%s] %s \n Warning on line %s in file %s with context \n %s";
         $msg = sprintf(
             $msg_tpl,
             $event->payload->get('errno'),
             $event->payload->get('errstr'),
             $event->payload->get('errline'),
-            $event->payload->get('errfile')
+            $event->payload->get('errfile'),
+            $event->payload->get('errcontext')
         );
         $logger->warning($msg);
     }
@@ -90,7 +92,8 @@ class ErrorLogger extends Behavior
         $log_context = [
             'code' => $exception->getCode(),
             'file' => $exception->getFile(),
-            'line' => $exception->getLine()
+            'line' => $exception->getLine(),
+            'trace' => $exception->getTraceAsString()
         ];
         $logger->error($msg, $log_context);
     }

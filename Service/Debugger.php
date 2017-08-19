@@ -37,7 +37,7 @@ class Debugger extends Component implements BootstrapInterface
         }
     }
 
-    public function errorHandler($errno, $errstr, $errfile, $errline)
+    public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext)
     {
         if (!(error_reporting() & $errno)) {
             // This error code is not included in error_reporting, so let it fall
@@ -48,7 +48,8 @@ class Debugger extends Component implements BootstrapInterface
             'errno' => $errno,
             'errstr' => $errstr,
             'errfile' => $errfile,
-            'errline' => $errline
+            'errline' => $errline,
+            'errcontext' => print_r($errcontext, true)
         ];
         $event = new Event($payload);
 
