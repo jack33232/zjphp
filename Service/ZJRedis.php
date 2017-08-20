@@ -8,6 +8,7 @@ use ZJPHP\Base\Exception\DatabaseErrorException;
 use ZJPHP\Base\Exception\InvalidConfigException;
 use Redis;
 use RedisException;
+use Exception;
 
 class ZJRedis extends Component
 {
