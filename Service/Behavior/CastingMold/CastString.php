@@ -3,6 +3,7 @@ namespace ZJPHP\Service\Behavior\CastingMold;
 
 use ZJPHP\Base\Behavior;
 use ZJPHP\Base\Kit\StringHelper;
+use ZJPHP\Facade\Security;
 use ZJPHP\Base\ZJPHP;
 
 class CastString extends Behavior
@@ -11,6 +12,13 @@ class CastString extends Behavior
     {
         if (is_string($dataSet[$field]) || is_numeric($dataSet[$field])) {
             return $dataSet[$field] = sprintf("%s", $dataSet[$field]);
+        }
+    }
+
+    public function castPassword(&$dataSet, $field, $cost = null)
+    {
+        if (is_string($dataSet[$field]) || is_numeric($dataSet[$field])) {
+            return $dataSet[$field] = Security::generatePasswordHash($dataSet[$field], $cost);
         }
     }
 
