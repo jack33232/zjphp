@@ -1,6 +1,7 @@
 <?php
 namespace ZJPHP\Service;
 
+use ZJPHP\Base\ZJPHP;
 use ZJPHP\Base\Component;
 use ZJPHP\Base\Kit\StringHelper;
 use ZJPHP\Base\Kit\ArrayHelper;
@@ -19,7 +20,7 @@ class CastingMold extends Component
         $this->_apcuEnabled = function_exists('apcu_fetch');
 
         if ($this->_apcuEnabled) {
-            $cache = apcu_fetch(self::REFLECTION_CACHE_KEY);
+            $cache = apcu_fetch(ZJPHP::$app->getAppName() . ':' .self::REFLECTION_CACHE_KEY);
             if ($cache !== false) {
                 self::$_reflectionCache = $cache;
             }
@@ -144,7 +145,7 @@ class CastingMold extends Component
         self::$_reflectionCache[$method]['handlerParams'] = $handlerParams;
 
         if ($this->_apcuEnabled) {
-            apcu_store(self::REFLECTION_CACHE_KEY, self::$_reflectionCache);
+            apcu_store(ZJPHP::$app->getAppName() . ':' .self::REFLECTION_CACHE_KEY, self::$_reflectionCache);
         }
 
         return self::$_reflectionCache[$method];

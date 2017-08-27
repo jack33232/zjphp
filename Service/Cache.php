@@ -67,6 +67,8 @@ class Cache extends Component
             return false;
         }
 
+        $key = ZJPHP::$app->getAppName() . ':' . $key;
+
         $engine = ($engine === 'default') ? $this->getDefaultEngine() : $this->engine($engine);
 
         $cached_item = $engine->getItem($key);
@@ -84,6 +86,8 @@ class Cache extends Component
             return $default;
         }
 
+        $key = ZJPHP::$app->getAppName() . ':' . $key;
+
         $engine = ($engine === 'default') ? $this->getDefaultEngine() : $this->engine($engine);
 
         $cached_item = $engine->getItem($key);
@@ -100,6 +104,8 @@ class Cache extends Component
             return false;
         }
 
+        $key = ZJPHP::$app->getAppName() . ':' . $key;
+
         $engine = ($engine === 'default') ? $this->getDefaultEngine() : $this->engine($engine);
         $cached_item = $engine->getItem($key);
 
@@ -111,6 +117,8 @@ class Cache extends Component
         if ($this->_isDisabled) {
             return;
         }
+
+        $key = ZJPHP::$app->getAppName() . ':' . $key;
 
         $engine = ($engine === 'default') ? $this->getDefaultEngine() : $this->engine($engine);
         $cached_item = $engine->getItem($key);
@@ -124,6 +132,8 @@ class Cache extends Component
         if ($this->_isDisabled) {
             return false;
         }
+
+        $key = ZJPHP::$app->getAppName() . ':' . $key;
 
         $engine = ($engine === 'default') ? $this->getDefaultEngine() : $this->engine($engine);
         return $engine->deleteItem($key);

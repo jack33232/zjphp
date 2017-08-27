@@ -86,81 +86,89 @@ class ZJPHP
     public static function generateAppConfig(array $config_files)
     {
         $config  = [];
-        $tempArray = [];
         $apcu_enabled = function_exists('apcu_fetch');
+        list($config_mtime, $checked_files, $cache_key) = $this->checkConfigFiles($config_files);
 
         if ($apcu_enabled) {
-            $config_mtime = static::getAppConfigMtime($config_files);
             $cache_exists = false;
-            $config_from_cache = apcu_fetch('array:' . RUNTIME_ENV . '_config', $cache_exists);
-            if ($cache_exists !== false && $config_from_cache['configMtime'] === $config_mtime) {
-                return $config_from_cache;
+            $cached_config = apcu_fetch($cache_key, $cache_exists);
+            if ($cache_exists !== false && $cached_config['config_mtime'] === $config_mtime) {
+                $cached_config['from_cache'] = true;
+                return $cached_config;
             }
         }
 
-        foreach ($config_files as $configuration) {
-            $configurationSet = [];
-            $runtimeConfigurationSet = [];
-            if (file_exists($configuration)) {
-                $configurationInfo = pathinfo($configuration, PATHINFO_DIRNAME | PATHINFO_BASENAME | PATHINFO_FILENAME | PATHINFO_EXTENSION);
-                if (strtolower($configurationInfo['extension']) !== 'php') {
-                    continue;
-                }
-                $configurationSet = require($configuration);
+        foreach ($checked_files['origin'] as $filename => $file) {
+            if ($filename === 'main') {
+                $config = require_once($file);
+            } else {
+                $config[$filename] = require_once($file);
+            }
+        }
 
-                if (RUNTIME_ENV !== 'production') {
-                    $runtimeConfiguration = str_replace($configurationInfo['filename'], $configurationInfo['filename'] . '-' . RUNTIME_ENV, $configuration);
-                    if (file_exists($runtimeConfiguration)) {
-                        $runtimeConfigurationSet = require($runtimeConfiguration);
+        if (RUNTIME_ENV !== 'production') {
+            foreach ($checked_files['runtime'] as $filename => $file) {
+                if ($filename === 'main') {
+                    $runtime_config = require_once($file);
+                    $config = ArrayHelper::merge($config, $runtime_config);
+                } else {
+                    $runtime_config = require_once($file);
+                    if (!isset($config[$filename])) {
+                        $config[$filename] = [];
                     }
+                    $config[$filename] = ArrayHelper::merge($config[$filename], $runtime_config);
                 }
-
-                $tempArray[$configurationInfo['filename']] = ArrayHelper::merge($configurationSet, $runtimeConfigurationSet);
             }
         }
 
-        if (!isset($tempArray['main'])) {
-            throw new InvalidConfigException('Miss the main configuration.');
-        }
-
-        $config = $tempArray['main'];
-        unset($tempArray['main']);
-        foreach ($tempArray as $key => $configurationSet) {
-                $config[$key] = $configurationSet;
-        }
-
-        if ($apcu_enabled) {
-            apcu_store('int:' . RUNTIME_ENV . '_config_mtime', $config_mtime);
-        }
-
+        $config['cache_key'] = $cache_key;
+        $config['config_mtime'] = $config_mtime;
+        $config['from_cache'] = false;
         return $config;
     }
 
-    public static function getAppConfigMtime(array $config_files)
+    protected static function checkConfigFiles(array $config_files)
     {
-        $mtime = null;
-        foreach ($config_files as $configuration) {
-            if (file_exists($configuration)) {
-                $configurationInfo = pathinfo($configuration, PATHINFO_DIRNAME | PATHINFO_BASENAME | PATHINFO_FILENAME | PATHINFO_EXTENSION);
-                if (strtolower($configurationInfo['extension']) !== 'php') {
+        $config_mtime = null;
+        $checked_files = [
+            'origin' => [],
+            'runtime' => []
+        ];
+
+        foreach ($config_files as $file) {
+            if (file_exists($file)) {
+                // Extract file info
+                list($dir, $basename, $ext, $filename) = array_values(pathinfo($file, PATHINFO_DIRNAME | PATHINFO_BASENAME | PATHINFO_EXTENSION | PATHINFO_FILENAME));
+
+                if (strtolower($ext) !== 'php') {
                     continue;
                 }
-                $temp_time = filemtime($configuration);
-                if ($temp_time > $mtime) {
-                    $mtime = $temp_time;
+
+                $checked_files['origin'][$filename] = $file;
+
+                $file_mtime = filemtime($file);
+                if ($file_mtime > $config_mtime) {
+                    $config_mtime = $file_mtime;
                 }
+
                 if (RUNTIME_ENV !== 'production') {
-                    $runtimeConfiguration = str_replace($configurationInfo['filename'], $configurationInfo['filename'] . '-' . RUNTIME_ENV, $configuration);
-                    if (file_exists($runtimeConfiguration)) {
-                        $temp_time = filemtime($runtimeConfiguration);
-                        if ($temp_time > $mtime) {
-                            $mtime = $temp_time;
+                    $runtime_file = str_replace($filename, $filename . '-' . RUNTIME_ENV, $file);
+                    if (file_exists($runtime_file)) {
+                        $checked_files['runtime'][$filename] = $runtime_file;
+                        $runtime_file_mtime = filemtime($runtime_file);
+                        if ($runtime_file_mtime > $config_mtime) {
+                            $config_mtime = $runtime_file_mtime;
                         }
                     }
                 }
             }
         }
 
-        return $mtime;
+        $cache_key = 'array:' . md5(implode(';', $checked_files['origin'])) . ':' . RUNTIME_ENV . '_config';
+        return [
+            'config_mtime' => $config_mtime,
+            'config_files' => $checked_files,
+            'cache_key' => $cache_key
+        ];
     }
 }

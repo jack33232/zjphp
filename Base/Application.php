@@ -44,11 +44,13 @@ abstract class Application extends ServiceLocator
         ZJPHP::$app = $this;
         $this->state = self::STATE_BEGIN;
 
-        if (isset($config['configMtime'])) {
-            $config = apcu_fetch('array:' . RUNTIME_ENV . '_config');
-        } else {
+        if ($config['from_cache'] === false) {
             $this->preInit($config);
+        } else {
+            unset($config['from_cache']);
         }
+        unset($config['config_mtime']);
+        
         parent::__construct($config);
     }
 
@@ -66,8 +68,9 @@ abstract class Application extends ServiceLocator
 
     public function preInit(&$config)
     {
-        $apcu_enabled = function_exists('apcu_fetch');
-
+        if (!isset($config['appName'])) {
+            throw new InvalidConfigException('App Name is required.');
+        }
         if (!isset($config['timeZone'])) {
             $config['timeZone'] = (ini_get('date.timezone')) ? : 'Asia/Hong_Kong';
         }
@@ -80,10 +83,12 @@ abstract class Application extends ServiceLocator
             }
         }
 
+        $apcu_enabled = function_exists('apcu_fetch');
         if ($apcu_enabled) {
-            $config_mtime = apcu_fetch('int:' . RUNTIME_ENV . '_config_mtime');
-            $config_to_cache = $config + ['configMtime' => $config_mtime];
-            apcu_store('array:' . RUNTIME_ENV . '_config', $config_to_cache);
+            $cache_key = $config['cache_key'];
+            unset($config['cache_key']);
+            unset($config['from_cache']);
+            apcu_store($cache_key, $config);
         }
     }
 

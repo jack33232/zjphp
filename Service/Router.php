@@ -123,10 +123,10 @@ class Router extends Component
         // Try to use cached
         if ($apcu_enabled) {
             $cache_exist = false;
-            $cache_mtime = apcu_fetch('int:' . RUNTIME_ENV . '_router_' . $route_map_name . '_mtime', $cache_exist);
+            $cache_mtime = apcu_fetch(ZJPHP::$app->getAppName() . ':int:' . RUNTIME_ENV . '_router_' . $route_map_name . '_mtime', $cache_exist);
             if ($cache_exist !== false && $cache_mtime === $mtime) {
-                $this->_routeRules = apcu_fetch('array:' . RUNTIME_ENV . '_router_rules_' . $route_map_name);
-                $routes = apcu_fetch('object:' . RUNTIME_ENV . '_router_routes_' . $route_map_name);
+                $this->_routeRules = apcu_fetch(ZJPHP::$app->getAppName() . ':array:' . RUNTIME_ENV . '_router_rules_' . $route_map_name);
+                $routes = apcu_fetch(ZJPHP::$app->getAppName() . ':object:' . RUNTIME_ENV . '_router_routes_' . $route_map_name);
                 $this->_router->resetRoutes($routes);
                 return;
             }
@@ -229,11 +229,11 @@ class Router extends Component
         }
 
         if ($apcu_enabled) {
-            $cache_rules_result = apcu_store('array:' . RUNTIME_ENV . '_router_rules_' . $route_map_name, $this->_routeRules);
-            $cache_rules_resultII = apcu_store('object:' . RUNTIME_ENV . '_router_routes_' . $route_map_name, $this->_router->routes());
+            $cache_rules_result = apcu_store(ZJPHP::$app->getAppName() . ':array:' . RUNTIME_ENV . '_router_rules_' . $route_map_name, $this->_routeRules);
+            $cache_rules_resultII = apcu_store(ZJPHP::$app->getAppName() . ':object:' . RUNTIME_ENV . '_router_routes_' . $route_map_name, $this->_router->routes());
 
             if ($cache_rules_result && $cache_rules_resultII) {
-                apcu_store('int:' . RUNTIME_ENV . '_router_' . $route_map_name . '_mtime', $mtime);
+                apcu_store(ZJPHP::$app->getAppName() . ':int:' . RUNTIME_ENV . '_router_' . $route_map_name . '_mtime', $mtime);
             }
         }
     }
