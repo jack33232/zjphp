@@ -87,7 +87,7 @@ class ZJPHP
     {
         $config  = [];
         $apcu_enabled = function_exists('apcu_fetch');
-        list($config_mtime, $checked_files, $cache_key) = $this->checkConfigFiles($config_files);
+        list($config_mtime, $checked_files, $cache_key) = static::checkConfigFiles($config_files);
 
         if ($apcu_enabled) {
             $cache_exists = false;
@@ -100,19 +100,20 @@ class ZJPHP
 
         foreach ($checked_files['origin'] as $filename => $file) {
             if ($filename === 'main') {
-                $config = require_once($file);
+                $main_config = require($file);
+                $config = ArrayHelper::merge($config, $main_config);
             } else {
-                $config[$filename] = require_once($file);
+                $config[$filename] = require($file);
             }
         }
 
         if (RUNTIME_ENV !== 'production') {
             foreach ($checked_files['runtime'] as $filename => $file) {
                 if ($filename === 'main') {
-                    $runtime_config = require_once($file);
+                    $runtime_config = require($file);
                     $config = ArrayHelper::merge($config, $runtime_config);
                 } else {
-                    $runtime_config = require_once($file);
+                    $runtime_config = require($file);
                     if (!isset($config[$filename])) {
                         $config[$filename] = [];
                     }
@@ -124,6 +125,7 @@ class ZJPHP
         $config['cache_key'] = $cache_key;
         $config['config_mtime'] = $config_mtime;
         $config['from_cache'] = false;
+
         return $config;
     }
 
@@ -166,9 +168,9 @@ class ZJPHP
 
         $cache_key = 'array:' . md5(implode(';', $checked_files['origin'])) . ':' . RUNTIME_ENV . '_config';
         return [
-            'config_mtime' => $config_mtime,
-            'config_files' => $checked_files,
-            'cache_key' => $cache_key
+            $config_mtime,
+            $checked_files,
+            $cache_key
         ];
     }
 }

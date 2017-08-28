@@ -5,6 +5,7 @@ use ZJPHP\Base\ZJPHP;
 use ZJPHP\Base\Component;
 use Twig_Loader_Filesystem;
 use Twig_Environment;
+use Twig_Extension_Debug;
 use ZJPHP\Base\Kit\ArrayHelper;
 use ZJPHP\Base\Exception\InvalidParamException;
 use Illuminate\Pagination\Paginator;
@@ -44,6 +45,9 @@ class Viewer extends Component
         }
 
         $this->_twigEnviroment = new Twig_Environment($this->_twigLoader, $this->_twigConfig);
+        if (!empty($this->_twigConfig['debug'])) {
+            $this->_twigEnviroment->addExtension(new Twig_Extension_Debug());
+        }
     }
 
     protected function loadTranslationExtension()
