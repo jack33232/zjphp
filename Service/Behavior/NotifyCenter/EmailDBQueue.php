@@ -8,6 +8,7 @@ use ZJPHP\Service\NotifyCenter;
 
 class EmailDBQueue extends Behavior
 {
+    protected $connection = 'default';
     public function events()
     {
         return [
@@ -18,7 +19,7 @@ class EmailDBQueue extends Behavior
     public function queueEmail($queue_email_event)
     {
         $db = ZJPHP::$app->get('db');
-        $db->table('notify_email_queue')->insert([
+        $db->table('notify_email_queue', $this->connection)->insert([
             'binding_key' => $queue_email_event->payload->get('bindingKey'),
             'send_email_event' => serialize($queue_email_event->payload->get('sendEmailEvent')),
             'body' => $queue_email_event->payload->get('body'),
@@ -30,5 +31,10 @@ class EmailDBQueue extends Behavior
         ]);
 
         $queue_email_event->handled = true;
+    }
+
+    public function setDB($connection)
+    {
+        $this->connection = $connection;
     }
 }

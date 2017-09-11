@@ -5,6 +5,7 @@ use ZJPHP\Base\ZJPHP;
 use ZJPHP\Base\Component;
 use ZJPHP\Base\Kit\StringHelper;
 use ZJPHP\Base\Exception\UnknownPropertyException;
+use ZJPHP\Base\Exception\InvalidParamException;
 use ReflectionClass;
 
 class Model extends Component
@@ -17,6 +18,14 @@ class Model extends Component
     {
         $this->activeRecord = $obj;
         parent::__construct($config);
+    }
+
+    public function init()
+    {
+        parent::init();
+        if (!property_exists($this->activeRecord, static::$ormPK)) {
+            throw new InvalidParamException('A model need primary key value.');
+        }
     }
 
     public function __get($key)

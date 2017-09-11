@@ -55,9 +55,9 @@ class Database extends Component implements TransactionInterface
         return $connection_instance;
     }
 
-    public function table($table)
+    public function table($table, $connection = 'default')
     {
-        return $this->connect()->table($table);
+        return $this->connect(PDO::FETCH_OBJ, null, $connection)->table($table);
     }
 
     public function select($query, $bindings = [])
