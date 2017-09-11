@@ -41,6 +41,13 @@ class ArrayHelper
             ) + $b;
     }
 
+    public static function genKey($fields, $data, $ordering = SORT_NATURAL, $glue = '-')
+    {
+        $key_data = self::mask($fields, $data);
+        ksort($key_data, $ordering);
+        return implode($glue, $key_data);
+    }
+
     public static function cleanQueryArray(array $array)
     {
         return array_filter($array, function ($item) {
