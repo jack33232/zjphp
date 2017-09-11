@@ -10,17 +10,6 @@ class NotifyCenter extends Component
 {
     const EVENT_SEND_EMAIL = 'notifySendEmail';
     const EVENT_QUEUE_EMAIL = 'notifyQueueEmail';
-    const EVENT_BLAST_PHP_CONSOLE = 'notifyBlastPHPConsole';
-    
-    public function buildBlastPHPConsoleEvent($variable, $tag = 'debug')
-    {
-        $payload = [
-            'variable' => $variable,
-            'tag' => $tag
-        ];
-
-        return new Event($payload);
-    }
 
     public function buildSendEmailEvent(array $params, $throw_exception = true)
     {

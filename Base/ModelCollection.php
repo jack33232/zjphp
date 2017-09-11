@@ -11,14 +11,6 @@ class ModelCollection extends DataCollection
 {
     protected $modelName;
 
-    public function __construct(array $models_data = array(), array $config = [])
-    {
-        if (!empty($models_data)) {
-            $this->attributes = $models_data;
-        }
-        parent::__construct($config);
-    }
-
     public function init()
     {
         parent::init();
