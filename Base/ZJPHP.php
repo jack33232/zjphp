@@ -3,6 +3,7 @@ namespace ZJPHP\Base;
 
 use ZJPHP\DI\Container;
 use ZJPHP\Base\Exception\InvalidConfigException;
+use ZJPHP\Base\Exception\InvalidParamException;
 use ZJPHP\Base\Kit\ArrayHelper;
 
 defined('ZJPHP_DIR') or define('ZJPHP_DIR', dirname(__DIR__));
@@ -80,6 +81,18 @@ class ZJPHP
             throw new InvalidConfigException('Object Configuration must be an array containing a "class" element.');
         } else {
             throw new InvalidConfigException('Unsupported configuration type: '. gettype($type));
+        }
+    }
+
+    public static function toCallable($handler)
+    {
+        if (is_callable($handler)) {
+            return $handler;
+        } else if (is_string($handler) && strpos('@', $handler) !== false) {
+            list($class, $method) = explode('@', $handler);
+            return [self::createObject($class), $method];
+        } else {
+            throw new InvalidParamException('Parameter not callable.');
         }
     }
 
