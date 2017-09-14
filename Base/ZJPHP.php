@@ -88,7 +88,7 @@ class ZJPHP
     {
         if (is_callable($handler)) {
             return $handler;
-        } else if (is_string($handler) && strpos('@', $handler) !== false) {
+        } else if (is_string($handler) && strpos($handler, '@') !== false) {
             list($class, $method) = explode('@', $handler);
             return [self::createObject($class), $method];
         } else {
