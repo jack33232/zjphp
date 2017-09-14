@@ -59,13 +59,7 @@ class Validation extends Component
 
     protected function callableToClosure($callable)
     {
-        if (is_string($callable) && strpos($callable, '@') !== false) {
-            list($class, $method) = explode('@', $callable);
-            $obj = ZJPHP::createObject($class);
-            $callable = [$obj, $method];
-        } elseif (!is_callable($callable)) {
-            throw new InvalidParamException('Parameter not callable.');
-        }
+        $callable = ZJPHP::toCallable($callable);
         $closure_func = function () use ($callable) {
             $args = func_get_args();
             return call_user_func_array($callable, $args);
