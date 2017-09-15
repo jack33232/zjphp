@@ -47,6 +47,7 @@ abstract class Application extends ServiceLocator
         if ($config['from_cache'] === false) {
             $this->preInit($config);
         } else {
+            unset($config['cache_key']);
             unset($config['from_cache']);
         }
         unset($config['config_mtime']);
@@ -86,10 +87,10 @@ abstract class Application extends ServiceLocator
         $apcu_enabled = function_exists('apcu_fetch');
         if ($apcu_enabled) {
             $cache_key = $config['cache_key'];
-            unset($config['cache_key']);
-            unset($config['from_cache']);
             apcu_store($cache_key, $config);
         }
+        unset($config['cache_key']);
+        unset($config['from_cache']);
     }
 
     public function coreComponents()
