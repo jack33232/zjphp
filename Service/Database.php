@@ -51,7 +51,7 @@ class Database extends Component implements TransactionInterface
     public function connect($fetech_mode = PDO::FETCH_OBJ, $fetch_argument = null, $connection = 'default', array $fetch_constructor_argument = [])
     {
         $connection_instance = Capsule::connection($connection);
-        call_user_func([$connection_instance, 'setFetchMode'], $fetech_mode, $fetch_argument, $fetch_constructor_argument);
+        $connection_instance->setFetchMode($fetech_mode, $fetch_argument, $fetch_constructor_argument);
         return $connection_instance;
     }
 
@@ -60,39 +60,40 @@ class Database extends Component implements TransactionInterface
         return $this->connect(PDO::FETCH_OBJ, null, $connection)->table($table);
     }
 
-    public function select($query, $bindings = [])
+    public function select($query, $bindings = [], $connection = 'default')
     {
-        return $this->connect()->select($query, $bindings);
+        return $this->connect(PDO::FETCH_OBJ, null, $connectio)->select($query, $bindings);
     }
 
-    public function cursor($query, $bindings = [])
+    public function cursor($query, $bindings = [], $connection = 'default')
     {
-        return $this->connect()->cursor($query, $bindings);
+        return $this->connect(PDO::FETCH_OBJ, null, $connectio)->cursor($query, $bindings);
     }
 
-    public function insert($query, $bindings = [])
+    public function insert($query, $bindings = [], $connection = 'default')
     {
-        return $this->connect()->insert($query, $bindings);
+        return $this->connect(PDO::FETCH_OBJ, null, $connectio)->insert($query, $bindings);
     }
 
-    public function update($query, $bindings = [])
+    public function update($query, $bindings = [], $connection = 'default')
     {
-        return $this->connect()->update($query, $bindings);
+        return $this->connect(PDO::FETCH_OBJ, null, $connectio)->update($query, $bindings);
     }
 
-    public function delete($query, $bindings = [])
+    public function delete($query, $bindings = [], $connection = 'default')
     {
-        return $this->connect()->delete($query, $bindings);
+        return $this->connect(PDO::FETCH_OBJ, null, $connectio)->delete($query, $bindings);
     }
 
-    public function statement($query, $bindings = [])
+    public function statement($query, $bindings = [], $connection = 'default')
     {
-        return $this->connect()->statement($query, $bindings);
+        return $this->connect(PDO::FETCH_OBJ, null, $connectio)->statement($query, $bindings);
     }
 
-    public function raw($value)
+    public function raw($value, $connection = 'default')
     {
-        return $this->connect()->raw($value);
+        $connection_instance = Capsule::connection($connection);
+        return $connection_instance->raw($value);
     }
 
     public function transaction($callback, $args = [])
