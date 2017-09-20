@@ -15,25 +15,29 @@ defined('UPLOAD_DIR') or define('UPLOAD_DIR', dirname(\SCRIPT_DIR) . '/upload');
 
 $sapi_type = php_sapi_name();
 if (substr($sapi_type, 0, 3) !== 'cli') {
+    $is_secure = false;
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {
+        $is_secure = true;
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on') {
+        $is_secure = true;
+    }
+    define('SCHEME', $is_secure ? 'https://' : 'http://');
     defined('ROOT_URL')
         or define(
             'ROOT_URL',
-            (empty($_SERVER['HTTPS']) ? 'http://' : 'https://')
-                . $_SERVER['SERVER_NAME']
+            SCHEME . $_SERVER['SERVER_NAME']
         );
 
     defined('CURRENT_URL')
         or define(
             'CURRENT_URL',
-            (empty($_SERVER['HTTPS']) ? 'http://' : 'https://')
-            . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']
+            SCHEME . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']
         );
 
     defined('BASE_URL')
         or define(
             'BASE_URL',
-            (empty($_SERVER['HTTPS']) ? 'http://' : 'https://')
-                . $_SERVER['SERVER_NAME']
+            SCHEME . $_SERVER['SERVER_NAME']
                 . (($subDir = dirname($_SERVER['SCRIPT_NAME'])) == '/' ? '' : $subDir)
         );
 }
