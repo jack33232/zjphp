@@ -62,32 +62,32 @@ class Database extends Component implements TransactionInterface
 
     public function select($query, $bindings = [], $connection = 'default')
     {
-        return $this->connect(PDO::FETCH_OBJ, null, $connectio)->select($query, $bindings);
+        return $this->connect(PDO::FETCH_OBJ, null, $connection)->select($query, $bindings);
     }
 
     public function cursor($query, $bindings = [], $connection = 'default')
     {
-        return $this->connect(PDO::FETCH_OBJ, null, $connectio)->cursor($query, $bindings);
+        return $this->connect(PDO::FETCH_OBJ, null, $connection)->cursor($query, $bindings);
     }
 
     public function insert($query, $bindings = [], $connection = 'default')
     {
-        return $this->connect(PDO::FETCH_OBJ, null, $connectio)->insert($query, $bindings);
+        return $this->connect(PDO::FETCH_OBJ, null, $connection)->insert($query, $bindings);
     }
 
     public function update($query, $bindings = [], $connection = 'default')
     {
-        return $this->connect(PDO::FETCH_OBJ, null, $connectio)->update($query, $bindings);
+        return $this->connect(PDO::FETCH_OBJ, null, $connection)->update($query, $bindings);
     }
 
     public function delete($query, $bindings = [], $connection = 'default')
     {
-        return $this->connect(PDO::FETCH_OBJ, null, $connectio)->delete($query, $bindings);
+        return $this->connect(PDO::FETCH_OBJ, null, $connection)->delete($query, $bindings);
     }
 
     public function statement($query, $bindings = [], $connection = 'default')
     {
-        return $this->connect(PDO::FETCH_OBJ, null, $connectio)->statement($query, $bindings);
+        return $this->connect(PDO::FETCH_OBJ, null, $connection)->statement($query, $bindings);
     }
 
     public function raw($value, $connection = 'default')
