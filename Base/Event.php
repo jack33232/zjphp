@@ -12,7 +12,7 @@ class Event extends Object
     public $data;
     public $payload;
 
-    private static $_in_transaction = false;
+    private static $_in_transaction = 0;
     private static $_events = [];
     private static $_transaction_events = [];
     private static $_triggered_transaction_events = [];
@@ -200,21 +200,21 @@ class Event extends Object
 
     public static function beginTransaction()
     {
-        self::$_in_transaction = true;
+        self::$_in_transaction++;
     }
 
     public static function transactionCommit()
     {
-        self::$_in_transaction = false;
-        while (!empty(self::$_triggered_transaction_events)) {
+        while (self::$_in_transaction === 1 && !empty(self::$_triggered_transaction_events)) {
             $handler_set = array_shift(self::$_triggered_transaction_events);
             call_user_func($handler_set[0], $handler_set[1]);
         }
+        self::$_in_transaction--;
     }
 
     public static function transactionRollback()
     {
-        self::$_in_transaction = false;
+        self::$_in_transaction--;
         self::$_triggered_transaction_events = [];
     }
 }

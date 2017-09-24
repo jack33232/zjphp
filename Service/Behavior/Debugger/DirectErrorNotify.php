@@ -6,59 +6,11 @@ use ZJPHP\Base\Behavior;
 use ZJPHP\Service\Debugger;
 use ZJPHP\Service\NotifyCenter;
 use ZJPHP\Base\Event;
+use ZJPHP\Service\Behavior\Debugger\ErrorNotify;
 use ReflectionClass;
 
-class ErrorNotify extends Behavior
+class DirectErrorNotify extends ErrorNotify
 {
-    protected $notifyList = [];
-    protected $smtp = '';
-
-    protected $errorEmailTpl = "<p>DateTime: %s <br> <b>Fatal Error Happened!<b></p>"
-        ."<p>[%s] %s <br> Error on line %s in file %s</p><p>Request From: %s<br>Request URI: %s<br>Request Params: <br><pre>%s</pre><br></p>";
-
-    protected $warningEmailTpl = "<p>DateTime: %s <br> <b>Warning!<b></p>"
-        ."<p>[%s] %s <br> Warning on line %s in file %s</p><p>Request From: %s<br>Request URI: %s<br>Request Params: <br><pre>%s</pre><br></p>";
-
-    protected $exceptionEmailTpl = "<p>DateTime: %s <br> <b> %s exception: [%s] %s<b></p>"
-        ."<p>Exception thrown on line %s in file %s</p><p>Request From: %s<br>Request URI: %s<br>Request Params: <br><pre>%s</pre><br></p>";
-
-    protected $rtErrEmailTpl = "<p>DateTime: %s <br> <b> Runtime Error: [%s] %s<b></p>"
-        ."<p>Error / Exception thrown on line %s in file %s</p><p>Request From: %s<br>Request URI: %s<br>Request Params: <br><pre>%s</pre><br></p>";
-
-    protected $notifiableRtErr = [
-        'code' => [],
-        'type' => [
-            'Error',
-            'PDOException',
-            'Illuminate\\Database\\QueryException',
-            'ZJPHP\\Base\\Exception\\DatabaseErrorException',
-            'ZJPHP\\Base\\Exception\\InvalidConfigException'
-        ]
-    ];
-
-    public function events()
-    {
-        return [
-            Debugger::EVENT_FATAL_ERROR_HAPPEN => 'notifyFatalError',
-            Debugger::EVENT_WARNING_HAPPEN => 'notifyWarning',
-            Debugger::EVENT_UNCAUGHT_EXCEPTION_HAPPEN => 'notifyUncaughtException',
-            Debugger::EVENT_RUNTIME_ERROR_HAPPEN => 'notifyRuntimeError'
-        ];
-    }
-
-    public function setNotifyList($list)
-    {
-        foreach ($list as $event_name => $notify_emails) {
-            $this->notifyList[$event_name] = $notify_emails;
-        }
-        return $this->notifyList;
-    }
-
-    public function setSmtp($smtp)
-    {
-        return $this->smtp = $smtp;
-    }
-
     public function notifyFatalError(Event $event)
     {
         if (!empty($this->notifyList[Debugger::EVENT_FATAL_ERROR_HAPPEN])) {
@@ -82,8 +34,8 @@ class ErrorNotify extends Behavior
                 ),
                 'priority' => 1
             ];
-            $queue_email_event = $notifyCenter->buildQueueEmailEvent($params, false);
-            $notifyCenter->trigger(NotifyCenter::EVENT_QUEUE_EMAIL, $queue_email_event);
+            $send_email_event = $notifyCenter->buildSendEmailEvent($params, false);
+            $notifyCenter->trigger(NotifyCenter::EVENT_SEND_EMAIL, $send_email_event);
         }
     }
 
@@ -110,9 +62,8 @@ class ErrorNotify extends Behavior
                 ),
                 'priority' => 3
             ];
-
-            $queue_email_event = $notifyCenter->buildQueueEmailEvent($params, false);
-            $notifyCenter->trigger(NotifyCenter::EVENT_QUEUE_EMAIL, $queue_email_event);
+            $send_email_event = $notifyCenter->buildSendEmailEvent($params, false);
+            $notifyCenter->trigger(NotifyCenter::EVENT_SEND_EMAIL, $send_email_event);
         }
     }
 
@@ -142,8 +93,8 @@ class ErrorNotify extends Behavior
                 ),
                 'priority' => 1
             ];
-            $queue_email_event = $notifyCenter->buildQueueEmailEvent($params, false);
-            $notifyCenter->trigger(NotifyCenter::EVENT_QUEUE_EMAIL, $queue_email_event);
+            $send_email_event = $notifyCenter->buildSendEmailEvent($params, false);
+            $notifyCenter->trigger(NotifyCenter::EVENT_SEND_EMAIL, $send_email_event);
         }
     }
 
@@ -178,23 +129,8 @@ class ErrorNotify extends Behavior
                     ),
                     'priority' => 1
                 ];
-                $queue_email_event = $notifyCenter->buildQueueEmailEvent($params, false);
-                $notifyCenter->trigger(NotifyCenter::EVENT_QUEUE_EMAIL, $queue_email_event);
-            }
-        }
-    }
-
-    public function setNotifiableRtErr($setting)
-    {
-        $this->notifiableRtErr = [
-            'code' => [],
-            'type' => []
-        ];
-        foreach ($setting as $errorCodeOrType) {
-            if (is_numeric($errorCodeOrType)) {
-                $this->notifiableRtErr['code'][] = intval($errorCodeOrType);
-            } elseif (is_string($errorCodeOrType)) {
-                $this->notifiableRtErr['type'][] = ltrim($errorCodeOrType, "\\");
+                $send_email_event = $notifyCenter->buildSendEmailEvent($params, false);
+                $notifyCenter->trigger(NotifyCenter::EVENT_SEND_EMAIL, $send_email_event);
             }
         }
     }

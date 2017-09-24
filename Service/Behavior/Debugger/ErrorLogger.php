@@ -108,7 +108,8 @@ class ErrorLogger extends Behavior
         $log_context = [
             'code' => $error->getCode(),
             'file' => $error->getFile(),
-            'line' => $error->getLine()
+            'line' => $error->getLine(),
+            'trace' => $exception->getTraceAsString()
         ];
         $logger->notice($msg, $log_context);
     }
