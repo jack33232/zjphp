@@ -39,8 +39,9 @@
         "ezyang/htmlpurifier": "~4.6",
         "intervention/image": "2.*",
         "symfony/config" : "3.0.*",
-        "symfony/twig-bridge": "*",
-        "league/climate": "3.2.*"
+        "symfony/twig-bridge": "~3.3.9",
+        "league/climate": "3.2.*",
+        "bunny/bunny": "dev-master"
     },
     "autoload": {
         "psr-4": {
