@@ -91,7 +91,6 @@ class CliDirectErrorNotify extends CliErrorNotify
 
     public function notifyRuntimeError(Event $event)
     {
-        $logger = ZJPHP::$app->get('logger');
         if (!empty($this->notifyList[Debugger::EVENT_RUNTIME_ERROR_HAPPEN])) {
             $error = $event->payload->get('error');
             $error_reflection = new ReflectionClass($error);
@@ -121,7 +120,6 @@ class CliDirectErrorNotify extends CliErrorNotify
                 ];
                 $send_email_event = $notifyCenter->buildSendEmailEvent($params, false);
                 $notifyCenter->trigger(NotifyCenter::EVENT_SEND_EMAIL, $send_email_event);
-                $logger->notice('Notify Error!');
             }
         }
     }
