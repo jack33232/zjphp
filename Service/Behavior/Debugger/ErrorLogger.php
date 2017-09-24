@@ -109,7 +109,7 @@ class ErrorLogger extends Behavior
             'code' => $error->getCode(),
             'file' => $error->getFile(),
             'line' => $error->getLine(),
-            'trace' => $exception->getTraceAsString()
+            'trace' => $error->getTraceAsString()
         ];
         $logger->notice($msg, $log_context);
     }
