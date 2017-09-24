@@ -1,5 +1,5 @@
 <?php
-namespace ZJPHP\Exception;
+namespace ZJPHP\Base\Exception;
 
 use Exception;
 
