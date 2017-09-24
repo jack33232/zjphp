@@ -10,26 +10,12 @@
         }
     ],
     "minimum-stability": "dev",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/jack33232/klein.php"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/jack33232/database"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/jack33232/KLogger"
-        }
-    ],
     "require": {
-        "klein/klein": "dev-zjpersonal",
+        "jack33232/klein": "dev-zjpersonal",
         "guzzlehttp/guzzle": "~6.2",
         "phpFastCache/phpFastCache": "~5.0",
-        "katzgrau/klogger": "dev-zjpersonal",
-        "illuminate/database": "dev-zjpersonal",
+        "jack33232/klogger": "dev-zjpersonal",
+        "jack33232/database": "dev-zjpersonal",
         "illuminate/events": "5.2.*",
         "illuminate/validation" : "5.2.*",
         "illuminate/pagination" : "5.2.*",
