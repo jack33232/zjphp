@@ -5,6 +5,7 @@ use ZJPHP\Base\ZJPHP;
 use ZJPHP\Base\Exception\UnknownMethodException;
 use ZJPHP\Base\Exception\UnknownPropertyException;
 use ZJPHP\Base\Exception\InvalidCallException;
+use ZJPHP\Base\Kit\StringHelper;
 
 class Object implements Configurable
 {
@@ -100,8 +101,8 @@ class Object implements Configurable
 
     protected static function getAndSet($name)
     {
-        $getter = 'get' . ucfirst($name);
-        $setter = 'set' . ucfirst($name);
+        $getter = 'get' . StringHelper::studly($name);
+        $setter = 'set' . StringHelper::studly($name);
         return array($getter, $setter);
     }
 }

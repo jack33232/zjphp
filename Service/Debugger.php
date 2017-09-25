@@ -37,7 +37,7 @@ class Debugger extends Component implements BootstrapInterface
         }
     }
 
-    public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext)
+    public function errorHandler($errno, $errstr, $errfile = '', $errline = 0, $errcontext = [])
     {
         if (!(error_reporting() & $errno)) {
             // This error code is not included in error_reporting, so let it fall
