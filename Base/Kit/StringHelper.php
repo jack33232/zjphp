@@ -368,4 +368,18 @@ class StringHelper
     {
         return Pluralizer::singular($string);
     }
+
+    public static function base64UrlEncode($data)
+    {
+        return str_replace('=', '', strtr(base64_encode($data), '+/', '-_'));
+    }
+
+    public static function base64UrlDecode($data)
+    {
+        if ($remainder = strlen($data) % 4) {
+            $data .= str_repeat('=', 4 - $remainder);
+        }
+
+        return base64_decode(strtr($data, '-_', '+/'));
+    }
 }

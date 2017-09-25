@@ -5,6 +5,7 @@ use ZJPHP\Base\ZJPHP;
 use ZJPHP\Base\Component;
 use ZJPHP\Base\Kit\StringHelper;
 use ZJPHP\Base\Exception\InvalidParamException;
+use ZJPHP\Base\Exception\InvalidConfigException;
 
 class Security extends Component
 {
@@ -66,6 +67,18 @@ class Security extends Component
      * @since 2.0.6
      */
     public $passwordHashCost = 13;
+
+    protected $allowedRsaAlgorithm = [
+        'RS256' => OPENSSL_ALGO_SHA256,
+        'RS384' => OPENSSL_ALGO_SHA384,
+        'RS512' => OPENSSL_ALGO_SHA512
+    ];
+
+    protected $rsaKeyChain = [
+        'private' => '',
+        'private_secret' => '',
+        'public' => ''
+    ];
 
     public function getCipher()
     {
@@ -742,5 +755,110 @@ class Security extends Component
         }
         
         return $hash;
+    }
+
+    public function setRsaKeyChain(array $key_chain)
+    {
+        if (!extension_loaded('openssl')) {
+            throw new InvalidConfigException('Encryption requires the OpenSSL PHP extension');
+        }
+
+        $this->rsaKeyChain = [
+            'public' => $key_chain['public'] ?? '',
+            'private' => $key_chain['private'] ?? '',
+            'private_secret' => $key_chain['private_secret'] ?? ''
+        ];
+    }
+
+    public function genDigitalSignature($data, $algo_id = 'RS256')
+    {
+        if (strpos('file://', $this->rsaKeyChain['private']) === false) {
+            throw new InvalidConfigException('Private key setting is empty or wrong format.');
+        }
+
+        $algo_id = $strtoupper($algo_id);
+        if (!array_key_exists($algo_id, $this->allowedRsaAlgorithm)) {
+            throw new InvalidParamException('Algorithm is not supported. Only support RS256/RS384/RS512');
+        }
+
+        $algorithm = $this->allowedRsaAlgorithm[$algo_id];
+
+        $key = openssl_pkey_get_private($this->rsaKeyChain['private'], $this->rsaKeyChain['private_secret']);
+        $this->validateKey($key);
+
+        $signature = '';
+
+        if (!openssl_sign($data, $signature, $key, $algorithm)) {
+            throw new InvalidArgumentException(
+                'There was an error while creating the signature: ' . openssl_error_string()
+            );
+        }
+
+        return $signature;
+    }
+
+    public function verifyDigitalSignature($data, $expected, $algo_id = 'RS256')
+    {
+        if (strpos('file://', $this->rsaKeyChain['public']) === false) {
+            throw new InvalidConfigException('Public key setting is empty or wrong format.');
+        }
+
+        $algo_id = $strtoupper($algo_id);
+        if (!array_key_exists($algo_id, $this->allowedRsaAlgorithm)) {
+            throw new InvalidParamException('Algorithm is not supported. Only support RS256/RS384/RS512');
+        }
+
+        $algorithm = $this->allowedRsaAlgorithm[$algo_id];
+
+        $key = openssl_pkey_get_public($this->rsaKeyChain['public']);
+        $this->validateKey($key);
+
+        return openssl_verify($data, $expected, $key, $algorithm) === 1;
+    }
+
+    // Use public key to encrypt but decrypt by private key
+    public function asymmetricEncrypt($data, $padding = OPENSSL_PKCS1_PADDING)
+    {
+        if (strpos('file://', $this->rsaKeyChain['public']) === false) {
+            throw new InvalidConfigException('Public key setting is empty or wrong format.');
+        }
+
+        $key = openssl_pkey_get_public($this->rsaKeyChain['public']);
+        $this->validateKey($key);
+
+        $encrypted = '';
+        openssl_public_encrypt($data, $encrypted, $key, $padding);
+
+        return $encrypted;
+    }
+
+    public function asymmetricDecrypt($encrypted, $padding = OPENSSL_PKCS1_PADDING)
+    {
+        if (strpos('file://', $this->rsaKeyChain['private']) === false) {
+            throw new InvalidConfigException('Private key setting is empty or wrong format.');
+        }
+
+        $key = openssl_pkey_get_private($this->rsaKeyChain['private'], $this->rsaKeyChain['private_secret']);
+        $this->validateKey($key);
+
+        $decrypted = '';
+        openssl_private_decrypt($encrypted, $decrypted, $key, $padding);
+
+        return $decrypted;
+    }
+
+    protected function validateKey($key)
+    {
+        if ($key === false) {
+            throw new InvalidParamException(
+                'It was not possible to parse your key, reason: ' . openssl_error_string()
+            );
+        }
+
+        $details = openssl_pkey_get_details($key);
+
+        if (!isset($details['key']) || $details['type'] !== OPENSSL_KEYTYPE_RSA) {
+            throw new InvalidParamException('This key is not compatible with RSA signatures');
+        }
     }
 }
