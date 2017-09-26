@@ -52,7 +52,7 @@ class Response extends KleinResponse
         return $this;
     }
 
-    public function apiJson($object, $option = 0, $jsonp_prefix = null, $vary_accept = false)
+    public function apiJson($object, $option = 0, $jsonp_prefix = null)
     {
         $this->body('');
         $this->noCache();
@@ -61,19 +61,10 @@ class Response extends KleinResponse
 
         if (null !== $jsonp_prefix) {
             // Should ideally be application/json-p once adopted
-            $this->header('Content-Type', 'text/javascript');
+            $this->header('Content-Type', 'application/javascript');
             $this->body("$jsonp_prefix($json);");
         } else {
-            if (!empty($vary_accept)) {
-                $this->header('Vary', 'Accept');
-                if (strpos($vary_accept, 'application/json') !== false) {
-                    $this->header('Content-Type', 'application/json');
-                } else {
-                    $this->header('Content-Type', 'text/plain');
-                }
-            } else {
-                $this->header('Content-Type', 'application/json');
-            }
+            $this->header('Content-Type', 'application/json');
             $this->body($json);
         }
 

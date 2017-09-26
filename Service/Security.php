@@ -770,13 +770,14 @@ class Security extends Component
         ];
     }
 
+    // Return hexit signature
     public function genDigitalSignature($data, $algo_id = 'RS256')
     {
-        if (strpos('file://', $this->rsaKeyChain['private']) === false) {
+        if (strpos($this->rsaKeyChain['private'], 'file://') !== 0) {
             throw new InvalidConfigException('Private key setting is empty or wrong format.');
         }
 
-        $algo_id = $strtoupper($algo_id);
+        $algo_id = strtoupper($algo_id);
         if (!array_key_exists($algo_id, $this->allowedRsaAlgorithm)) {
             throw new InvalidParamException('Algorithm is not supported. Only support RS256/RS384/RS512');
         }
@@ -794,16 +795,16 @@ class Security extends Component
             );
         }
 
-        return $signature;
+        return bin2hex($signature);
     }
 
     public function verifyDigitalSignature($data, $expected, $algo_id = 'RS256')
     {
-        if (strpos('file://', $this->rsaKeyChain['public']) === false) {
+        if (strpos($this->rsaKeyChain['public'], 'file://') !== 0) {
             throw new InvalidConfigException('Public key setting is empty or wrong format.');
         }
 
-        $algo_id = $strtoupper($algo_id);
+        $algo_id = strtoupper($algo_id);
         if (!array_key_exists($algo_id, $this->allowedRsaAlgorithm)) {
             throw new InvalidParamException('Algorithm is not supported. Only support RS256/RS384/RS512');
         }
@@ -813,13 +814,13 @@ class Security extends Component
         $key = openssl_pkey_get_public($this->rsaKeyChain['public']);
         $this->validateKey($key);
 
-        return openssl_verify($data, $expected, $key, $algorithm) === 1;
+        return openssl_verify($data, hex2bin($expected), $key, $algorithm) === 1;
     }
 
     // Use public key to encrypt but decrypt by private key
     public function asymmetricEncrypt($data, $padding = OPENSSL_PKCS1_PADDING)
     {
-        if (strpos('file://', $this->rsaKeyChain['public']) === false) {
+        if (strpos($this->rsaKeyChain['public'], 'file://') !== 0) {
             throw new InvalidConfigException('Public key setting is empty or wrong format.');
         }
 
@@ -834,7 +835,7 @@ class Security extends Component
 
     public function asymmetricDecrypt($encrypted, $padding = OPENSSL_PKCS1_PADDING)
     {
-        if (strpos('file://', $this->rsaKeyChain['private']) === false) {
+        if (strpos($this->rsaKeyChain['private'], 'file://') !== 0) {
             throw new InvalidConfigException('Private key setting is empty or wrong format.');
         }
 
