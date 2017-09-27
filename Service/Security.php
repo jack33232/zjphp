@@ -830,7 +830,7 @@ class Security extends Component
         $encrypted = '';
         openssl_public_encrypt($data, $encrypted, $key, $padding);
 
-        return $encrypted;
+        return bin2hex($encrypted);
     }
 
     public function asymmetricDecrypt($encrypted, $padding = OPENSSL_PKCS1_PADDING)
@@ -843,7 +843,7 @@ class Security extends Component
         $this->validateKey($key);
 
         $decrypted = '';
-        openssl_private_decrypt($encrypted, $decrypted, $key, $padding);
+        openssl_private_decrypt(hex2bin($encrypted), $decrypted, $key, $padding);
 
         return $decrypted;
     }
