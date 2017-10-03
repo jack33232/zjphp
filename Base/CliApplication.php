@@ -102,7 +102,7 @@ abstract class CliApplication extends Application
         ];
     }
 
-    public function run ()
+    public function run()
     {
         $this->state = self::STATE_START;
         $this->genesis = microtime(true);
@@ -134,6 +134,7 @@ abstract class CliApplication extends Application
         if ($this->has('db', true)) {
             $db = $this->get('db');
             $db->disconnect('all connections');
+            usleep(5000);
         }
     }
 }
