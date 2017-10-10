@@ -124,4 +124,13 @@ class ArrayHelper
             unset($array[$key]);
         }
     }
+
+    public static function inArray($needle, $haystack, $case_insensitive = false)
+    {
+        if ($case_insensitive) {
+            return count(preg_grep('/^'. preg_quote($needle) . '$/i', $haystack)) > 0;
+        } else {
+            return in_array($needle, $haystack);
+        }
+    }
 }
