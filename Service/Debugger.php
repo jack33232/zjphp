@@ -44,11 +44,14 @@ class Debugger extends Component implements BootstrapInterface
             // through to the standard PHP error handler
             return false;
         }
+        $trace = debug_backtrace();
+
         $payload = [
             'errno' => $errno,
             'errstr' => $errstr,
             'errfile' => $errfile,
             'errline' => $errline,
+            'errtrace' => print_r($trace, true),
             'errcontext' => print_r($errcontext, true)
         ];
         $event = new Event($payload);

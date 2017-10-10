@@ -134,7 +134,6 @@ abstract class CliApplication extends Application
         if ($this->has('db', true)) {
             $db = $this->get('db');
             $db->disconnect('all connections');
-            usleep(5000);
         }
     }
 }
