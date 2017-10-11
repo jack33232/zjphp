@@ -44,7 +44,7 @@ class Debugger extends Component implements BootstrapInterface
             // through to the standard PHP error handler
             return false;
         }
-        $trace = debug_backtrace();
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 
         $payload = [
             'errno' => $errno,
