@@ -51,8 +51,7 @@ class Debugger extends Component implements BootstrapInterface
             'errstr' => $errstr,
             'errfile' => $errfile,
             'errline' => $errline,
-            'errtrace' => print_r($trace, true),
-            'errcontext' => print_r($errcontext, true)
+            'errtrace' => print_r($trace, true)
         ];
         $event = new Event($payload);
 
