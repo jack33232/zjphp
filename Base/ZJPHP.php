@@ -183,6 +183,13 @@ class ZJPHP
             }
         }
 
+        if (file_exists($secret_file = SCRIPT_DIR . '/config/secret.php')) {
+            $secret_file_mtime = filemtime($secret_file);
+            if ($secret_file_mtime > $config_mtime) {
+                $config_mtime = $secret_file_mtime;
+            }
+        }
+
         $cache_key = 'array:' . md5(implode(';', $checked_files['origin'])) . ':' . RUNTIME_ENV . '_config';
         return [
             $config_mtime,
