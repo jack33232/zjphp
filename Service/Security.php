@@ -862,4 +862,65 @@ class Security extends Component
             throw new InvalidParamException('This key is not compatible with RSA signatures');
         }
     }
+
+    public function isLuhnValid($number)
+    {
+        $number = strval($this->_toInt($number));
+        // Validate the check sum
+        $check_sum = $this->getLuhnCheckSum($number);
+        if ($check_sum % 10 !== 0) {
+            return false;
+        }
+
+        $num_of_digits = strlen($number);
+        $check_digit_to_check = intval($number[$num_of_digits - 1]);
+        $number = substr($number, 0, $num_of_digits - 1);
+        // Validate the check digit
+        $check_digit_to_verify = $this->genLuhnCheckDigit($number);
+        return $check_digit_to_check === $check_digit_to_verify;
+    }
+
+    public function genLuhnCheckDigit($number)
+    {
+        $number = strval($this->_toInt($number));
+        $check_sum = strval($this->getLuhnCheckSum($number, false));
+        return ($tmp_val = intval($check_sum[strlen($check_sum) - 1])) === 0 ? 0 : 10 - $tmp_val;
+    }
+
+    protected function getLuhnCheckSum($number, $with_check_digit = true)
+    {
+        if (!$with_check_digit) {
+            $number = $number . 0;
+        }
+        $num_of_digits = strlen($number);
+        $check_sum = 0;
+
+        // Start at the next last digit
+        for ($i = $num_of_digits - 2; $i >= 0; $i -= 2) {
+            // Multiply number with 2
+            $tmp = intval($number[$i]) * 2;
+
+            // If a 2 digit number, split and add togheter
+            if ($tmp > 9) {
+                $tmp = floor($tmp / 10) + ($tmp % 10);
+            }
+
+            // Sum it upp
+            $check_sum += $tmp;
+        }
+
+        // Start at the next last digit
+        for ($i = $num_of_digits - 1; $i >= 0; $i -= 2) {
+            // Sum it upp
+            $check_sum += intval($number[$i]);
+        }
+
+        return $check_sum;
+    }
+
+    private function _toInt($str)
+    {
+        return preg_replace("/[^\d]/", "", $str);
+    }
+
 }
