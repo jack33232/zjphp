@@ -67,6 +67,12 @@ class ModelCollection extends DataCollection
         return $this->keys();
     }
 
+    public function column($field)
+    {
+        $ormPK = $this->modelName::$ormPK;
+        return array_column($this->attributes, $field, $ormPK);
+    }
+
     protected function generator()
     {
         foreach ($this->attributes as $model_data) {
