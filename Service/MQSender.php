@@ -66,7 +66,6 @@ class MQSender extends Component
         if (isset($this->establishedQueues[$queue])) {
             $channel = $this->establishedQueues[$queue];
         } else {
-            $this->client->connect();
             $channel = $this->client->channel();
             $channel->queueDeclare($queue, false, true, false, false);
             $this->establishedQueues[$queue] = $channel;
