@@ -28,6 +28,7 @@ class MQSender extends Component
     public function init()
     {
         $this->client = new Client($this->rabbitmqOpts);
+        $this->client->connect();
     }
 
     public function blast($queue, $messages)
@@ -124,7 +125,6 @@ class MQSender extends Component
         if (isset($this->establishedExchanges[$exchange])) {
             $channel = $this->establishedExchanges[$exchange];
         } else {
-            $this->client->connect();
             $channel = $this->client->channel();
             $channel->exchangeDeclare(
                 $exchange,
