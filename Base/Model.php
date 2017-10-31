@@ -6,15 +6,19 @@ use ZJPHP\Base\Component;
 use ZJPHP\Base\Kit\StringHelper;
 use ZJPHP\Base\Exception\UnknownPropertyException;
 use ZJPHP\Base\Exception\InvalidParamException;
+use ZJPHP\Base\Exception\InvalidCallException;
 use ReflectionClass;
+use IteratorAggregate;
+use ArrayAccess;
+use stdClass;
 
-class Model extends Component
+class Model extends Component implements IteratorAggregate, ArrayAccess
 {
     protected $activeRecord;
     public static $ormTable;
     public static $ormPK;
 
-    public function __construct($obj, $config = [])
+    public function __construct(stdClass $obj, $config = [])
     {
         $this->activeRecord = $obj;
         parent::__construct($config);
@@ -70,6 +74,15 @@ class Model extends Component
         }
     }
 
+    public function __unset($key)
+    {
+        if (property_exists($this->activeRecord, $key)) {
+            unset($this->activeRecord->$key);
+        } else {
+            return parent::__unset($key);
+        }
+    }
+
     public function updateActiveRecord($data)
     {
         foreach ($data as $key => $value) {
@@ -83,5 +96,41 @@ class Model extends Component
             $db = ZJPHP::$app->get('db');
             $this->activeRecord = $db->table(static::$ormTable)->where(static::$ormPK, $this->activeRecord->{static::$ormPK})->first();
         }
+    }
+
+    public function getIterator()
+    {
+        return $this->loopGenerator();
+    }
+
+    public function &loopGenerator()
+    {
+        foreach ($this->activeRecord as $key => &$value) {
+            yield $key => $value;
+        }
+    }
+
+    public function offsetSet($offset, $value)
+    {
+        if (is_null($offset)) {
+            throw new InvalidCallException('Model Class cannot assign null offset property.');
+        } else {
+            $this->__set($offset, $value);
+        }
+    }
+
+    public function offsetExists($offset)
+    {
+        return $this->__isset($offset);
+    }
+
+    public function offsetUnset($offset)
+    {
+        $this->__unset($offset);
+    }
+
+    public function offsetGet($offset)
+    {
+        return $this->__get($offset);
     }
 }
